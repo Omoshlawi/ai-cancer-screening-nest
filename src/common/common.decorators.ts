@@ -1,0 +1,60 @@
+import { applyDecorators } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import {
+  HttpInternalServerErrorResponseDto,
+  HttpNotFoundErrorResponseDto,
+  HttpUnauthorizedErrorResponseDto,
+  HttpFobbidenErrorResponseDto,
+  HttpBadRequestResponseDto,
+} from './commond.dto';
+
+type ApiErrorResponseProps = {
+  badRequest?: boolean;
+  notFound?: boolean;
+  unauthorized?: boolean;
+  forbidden?: boolean;
+  internalServerError?: boolean;
+};
+
+export const ApiErrorsResponse = ({
+  badRequest = false,
+  notFound = true,
+  unauthorized = true,
+  forbidden = true,
+  internalServerError = true,
+}: ApiErrorResponseProps = {}) => {
+  const decorators: any[] = [];
+  if (internalServerError) {
+    decorators.push(
+      ApiInternalServerErrorResponse({
+        type: HttpInternalServerErrorResponseDto,
+      }),
+    );
+  }
+  if (notFound) {
+    decorators.push(
+      ApiNotFoundResponse({ type: HttpNotFoundErrorResponseDto }),
+    );
+  }
+  if (unauthorized) {
+    decorators.push(
+      ApiUnauthorizedResponse({ type: HttpUnauthorizedErrorResponseDto }),
+    );
+  }
+  if (forbidden) {
+    decorators.push(
+      ApiForbiddenResponse({ type: HttpFobbidenErrorResponseDto }),
+    );
+  }
+  if (badRequest) {
+    decorators.push(ApiBadRequestResponse({ type: HttpBadRequestResponseDto }));
+  }
+
+  return applyDecorators(...decorators);
+};
