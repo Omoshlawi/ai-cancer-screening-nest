@@ -1,12 +1,13 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { AppConfig } from './config/app.config';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Logger } from '@nestjs/common';
-import { AuthService } from '@thallesp/nestjs-better-auth';
-import { BetterAuthWithPlugins } from './auth/auth.types';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AuthService } from '@thallesp/nestjs-better-auth';
+import { Request, Response } from 'express';
+import { AppModule } from './app.module';
+import { BetterAuthWithPlugins } from './auth/auth.types';
 import { mergeBetterAuthSchema } from './common/common.utils';
-import { Request, Response, NextFunction } from 'express';
+import { AppConfig } from './config/app.config';
 
 async function bootstrap() {
   const logger = new Logger('Main');
@@ -38,7 +39,7 @@ async function bootstrap() {
   // Setup Swagger with merged documentation
   SwaggerModule.setup('api', app, mergedDocument);
 
-  app.use('/api-doc', (req: Request, res: Response, next: NextFunction) => {
+  app.use('/api-doc', (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'text/html');
     res.send(`<!doctype html>
           <html>
@@ -76,4 +77,5 @@ async function bootstrap() {
   logger.log(`Server is running on port ${appConfig.port}`);
   logger.log(`Server URL: ${appConfig.betterAuthUrl}`);
 }
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 bootstrap();

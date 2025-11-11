@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { DynamicModule } from '@nestjs/common';
+import { DiscoveryService, MetadataScanner, Reflector } from '@nestjs/core';
 import {
   AFTER_HOOK_KEY,
   AuthModule as AuthenticationModule,
@@ -13,14 +14,10 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import {
   admin,
-  anonymous,
-  apiKey,
   bearer,
   createAuthMiddleware,
   jwt,
-  multiSession,
   openAPI,
-  organization,
   username,
 } from 'better-auth/plugins';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -28,7 +25,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { adminConfig } from './auth.contants';
 import { AuthExtendedController } from './auth.controller';
 import { AuthHookHook } from './auth.hooks';
-import { DiscoveryService, MetadataScanner, Reflector } from '@nestjs/core';
 
 const HOOKS = [
   { metadataKey: BEFORE_HOOK_KEY, hookType: 'before' as const },

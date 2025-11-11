@@ -33,8 +33,6 @@ const userRole = adminPluginAcl.newRole({
   ...userAc.statements,
 });
 
-
-
 export const adminPluginRoles = {
   ...adminDefaultRoles,
   admin: adminRole,
