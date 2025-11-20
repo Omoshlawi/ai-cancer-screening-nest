@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
@@ -94,6 +95,7 @@ export class AuthModule {
               openAPI(),
               jwt(),
             ],
+            advanced: { disableOriginCheck: true },
             hooks,
             emailAndPassword: {
               enabled: true,
@@ -103,7 +105,7 @@ export class AuthModule {
                 console.log('Token ---------', token);
                 console.log('Url ---------', `/reset-password?token=${token}`);
               },
-              requireEmailVerification: true,
+              requireEmailVerification: false,
             },
             emailVerification: {
               // eslint-disable-next-line @typescript-eslint/require-await

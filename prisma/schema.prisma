@@ -90,3 +90,40 @@ model Jwks {
 
   @@map("jwks")
 }
+
+model CommunityHealthProvider {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName String
+  lastName String
+  phoneNumber String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Client {
+  id String @id @default(cuid())
+  firstName String
+  lastName String
+  dateOfBirth DateTime
+  phoneNumber String
+  address String
+  nationalId String
+  maritalStatus MaritalStatus
+  createdById String @unique
+  createdBy CommunityHealthProvider @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+  SEPARATED
+}

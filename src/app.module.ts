@@ -7,6 +7,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RequireSystemPermissionsGuard } from './auth/auth.guards';
+import { ClientsModule } from './clients/clients.module';
+import { ChpsModule } from './chps/chps.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { RequireSystemPermissionsGuard } from './auth/auth.guards';
     PrismaModule,
     ScheduleModule.forRoot(),
     AuthModule.forRoot(),
+    ClientsModule,
+    ChpsModule,
   ],
   controllers: [AppController],
   providers: [
