@@ -7,12 +7,15 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import {
+  HttpBadRequestResponseDto,
+  HttpFobbidenErrorResponseDto,
   HttpInternalServerErrorResponseDto,
   HttpNotFoundErrorResponseDto,
   HttpUnauthorizedErrorResponseDto,
-  HttpFobbidenErrorResponseDto,
-  HttpBadRequestResponseDto,
 } from './commond.dto';
+
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { Request } from 'express';
 
 type ApiErrorResponseProps = {
   badRequest?: boolean;
@@ -58,3 +61,10 @@ export const ApiErrorsResponse = ({
 
   return applyDecorators(...decorators);
 };
+
+export const OriginalUrl = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request: Request = ctx.switchToHttp().getRequest();
+    return request.originalUrl;
+  },
+);

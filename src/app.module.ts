@@ -9,12 +9,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { RequireSystemPermissionsGuard } from './auth/auth.guards';
 import { ClientsModule } from './clients/clients.module';
 import { ChpsModule } from './chps/chps.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
     ConfigifyModule.forRootAsync(),
     PrismaModule,
     ScheduleModule.forRoot(),
+    CommonModule.register({ global: true }),
     AuthModule.forRoot(),
     ClientsModule,
     ChpsModule,

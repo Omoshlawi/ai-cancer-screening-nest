@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Logger,
+  ValidationError,
+  ValidationPipe,
+} from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AuthService } from '@thallesp/nestjs-better-auth';
@@ -13,6 +18,55 @@ async function bootstrap() {
   const logger = new Logger('Main');
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      exceptionFactory: (validationErrors: ValidationError[] = []) => {
+        const getPrettyClassValidatorErrors = (
+          validationErrors: ValidationError[],
+          parentProperty = '',
+        ): Array<{ [property: string]: { _errors: string[] } }> => {
+          const errors: Array<{ [property: string]: { _errors: string[] } }> =
+            [];
+
+          const getValidationErrorsRecursively = (
+            validationErrors: ValidationError[],
+            parentProperty = '',
+          ) => {
+            for (const error of validationErrors) {
+              const propertyPath = parentProperty
+                ? `${parentProperty}.${error.property}`
+                : error.property;
+
+              if (error.constraints) {
+                errors.push({
+                  [propertyPath]: {
+                    _errors: Object.values(error.constraints),
+                  },
+                });
+              }
+
+              if (error.children?.length) {
+                getValidationErrorsRecursively(error.children, propertyPath);
+              }
+            }
+          };
+
+          getValidationErrorsRecursively(validationErrors, parentProperty);
+
+          return errors;
+        };
+
+        const errors = getPrettyClassValidatorErrors(validationErrors);
+
+        return new BadRequestException({
+          message: 'validation error',
+          errors: errors,
+        });
+      },
+    }),
+  );
   const appConfig = app.get(AppConfig);
   const authService: AuthService<BetterAuthWithPlugins> = app.get(AuthService);
 

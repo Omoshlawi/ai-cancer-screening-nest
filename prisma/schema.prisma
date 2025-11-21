@@ -30,6 +30,7 @@ model User {
   banExpires      DateTime?
   sessions        Session[]
   accounts        Account[]
+  communityHealthProvider CommunityHealthProvider?
 
   @@unique([email])
   @@unique([username])
@@ -98,6 +99,8 @@ model CommunityHealthProvider {
   firstName String
   lastName String
   phoneNumber String
+  clients Client[]
+
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -113,7 +116,7 @@ model Client {
   address String
   nationalId String
   maritalStatus MaritalStatus
-  createdById String @unique
+  createdById String
   createdBy CommunityHealthProvider @relation(fields: [createdById], references: [id], onDelete: Cascade)
   
   createdAt DateTime @default(now())
