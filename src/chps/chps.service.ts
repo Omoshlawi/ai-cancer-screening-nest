@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '..//prisma/prisma.service';
 import { CreateChpDto, FindChpDto } from './chp.dto';
 import { AuthService } from '@thallesp/nestjs-better-auth';
@@ -16,15 +20,28 @@ export class ChpsService {
   ) {}
 
   async create(createChpDto: CreateChpDto) {
+    const isUsernameAvailable = await this.authService.api.isUsernameAvailable({
+      body: { username: createChpDto.username },
+    });
+    if (!isUsernameAvailable) {
+      throw new BadRequestException('Username is already taken');
+    }
     const user = await this.authService.api.createUser({
       body: {
         email: createChpDto.email,
         password: createChpDto.password,
         name: createChpDto.firstName + ' ' + createChpDto.lastName,
-        role: 'user', // TODO: change to chp
-        ...{ username: createChpDto.username },
+        role: 'chp',
       },
     });
+
+    await this.prismaService.user.update({
+      where: { id: user.user.id },
+      data: {
+        username: createChpDto.username,
+      },
+    });
+
     return await this.prismaService.communityHealthProvider.create({
       data: {
         firstName: createChpDto.firstName,

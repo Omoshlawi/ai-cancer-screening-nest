@@ -1,0 +1,1 @@
+export const REQUIRE_CHP_TOKEN = 'REQUIRE_CHP';

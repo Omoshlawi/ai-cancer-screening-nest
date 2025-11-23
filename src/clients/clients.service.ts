@@ -16,6 +16,9 @@ export class ClientsService {
   ) {}
 
   async create(createClientDto: CreateClientDto, user: UserSession['user']) {
+    const chp = await this.prismaService.communityHealthProvider.findUnique({
+      where: { userId: user.id },
+    });
     return this.prismaService.client.create({
       data: {
         firstName: createClientDto.firstName,
@@ -25,7 +28,7 @@ export class ClientsService {
         address: createClientDto.address,
         nationalId: createClientDto.nationalId,
         maritalStatus: createClientDto.maritalStatus,
-        createdById: user.id,
+        createdById: chp!.id,
       },
     });
   }

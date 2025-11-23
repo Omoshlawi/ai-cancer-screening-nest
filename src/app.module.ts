@@ -10,6 +10,7 @@ import { RequireSystemPermissionsGuard } from './auth/auth.guards';
 import { ClientsModule } from './clients/clients.module';
 import { ChpsModule } from './chps/chps.module';
 import { CommonModule } from './common/common.module';
+import { RequireCHPGuard } from './chps/chp.guards';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CommonModule } from './common/common.module';
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: RequireSystemPermissionsGuard },
+    { provide: APP_GUARD, useClass: RequireCHPGuard },
   ],
 })
 export class AppModule {}
