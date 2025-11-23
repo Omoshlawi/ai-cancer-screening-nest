@@ -81,12 +81,13 @@ export class ChpsService {
       this.prismaService.communityHealthProvider.findMany(dbQuery),
       this.prismaService.communityHealthProvider.count(pick(dbQuery, 'where')),
     ]);
+
     return {
-      result: data,
+      results: data,
       ...this.paginationService.buildPaginationControls(
         totalCount,
         originalUrl,
-        pick(dbQuery, 'where'),
+        findChpDto,
       ),
     };
   }
