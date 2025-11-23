@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   BadRequestException,
@@ -13,6 +14,7 @@ import { AppModule } from './app.module';
 import { BetterAuthWithPlugins } from './auth/auth.types';
 import { mergeBetterAuthSchema } from './common/common.utils';
 import { AppConfig } from './config/app.config';
+import { merge } from 'lodash';
 
 async function bootstrap() {
   const logger = new Logger('Main');
@@ -62,7 +64,7 @@ async function bootstrap() {
 
         return new BadRequestException({
           message: 'validation error',
-          errors: errors,
+          errors: errors.reduce((acc, curr) => merge(acc, curr), {}),
         });
       },
     }),

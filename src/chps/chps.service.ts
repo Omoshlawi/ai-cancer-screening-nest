@@ -1,9 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '..//prisma/prisma.service';
 import { CreateChpDto, FindChpDto } from './chp.dto';
 import { AuthService } from '@thallesp/nestjs-better-auth';
@@ -90,5 +85,15 @@ export class ChpsService {
         findChpDto,
       ),
     };
+  }
+
+  async findOne(id: string) {
+    const chp = await this.prismaService.communityHealthProvider.findUnique({
+      where: { id },
+    });
+    if (!chp) {
+      throw new NotFoundException('Community health provider not found');
+    }
+    return chp;
   }
 }
