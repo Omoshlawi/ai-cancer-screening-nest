@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthService } from '@thallesp/nestjs-better-auth';
@@ -41,7 +42,8 @@ export class RequireCHPGuard implements CanActivate {
     const session = await this.authService.api.getSession({
       headers: fromNodeHeaders(request.headers),
     });
-    if (!session || !session.session || !session.user) return false;
+    if (!session || !session.session || !session.user)
+      throw new UnauthorizedException();
 
     const chp = await this.prismaService.communityHealthProvider.findUnique({
       where: { userId: session.user.id },

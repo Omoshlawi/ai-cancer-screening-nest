@@ -66,15 +66,6 @@ export class CreateClientDto {
   phoneNumber: string;
 
   @ApiProperty({
-    description: 'The email of the client',
-    example: 'john.doe@example.com',
-  })
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(3)
-  email: string;
-
-  @ApiProperty({
     description: 'The password of the client',
     example: 'address',
   })
@@ -89,7 +80,7 @@ export class CreateClientDto {
   })
   @IsNotEmpty()
   @IsString()
-  @MinLength(10)
+  @MinLength(6)
   nationalId: string;
 
   @ApiProperty({

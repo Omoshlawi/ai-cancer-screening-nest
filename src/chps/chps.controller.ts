@@ -20,7 +20,6 @@ export class ChpsController {
   @Post()
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Create a new community health provider(CHP)' })
-  @OptionalAuth()
   @RequireSystemPermission({
     chp: ['create'],
   })
