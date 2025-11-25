@@ -7,6 +7,7 @@ import {
   IsLongitude,
   IsDateString,
   IsOptional,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Screening } from '../../generated/prisma/client';
@@ -27,11 +28,11 @@ export enum SmokingStatus {
 }
 
 export class CoordinatesDto {
-  @ApiProperty({ description: 'Latitude' })
+  @ApiProperty({ description: 'Latitude', example: -1.2921 })
   @IsNumber()
   @IsLatitude()
   latitude: number;
-  @ApiProperty({ description: 'Longitude' })
+  @ApiProperty({ description: 'Longitude', example: 36.8219 })
   @IsNumber()
   @IsLongitude()
   longitude: number;
@@ -109,10 +110,10 @@ export class ScreenClientDto {
   familyMemberDiagnosedWithCervicalCancer: ScreenBoolean;
 
   @ApiProperty({
-    description: 'Coordinates',
+    description: 'Geolocation coordinates',
     type: CoordinatesDto,
-    required: true,
   })
+  @ValidateNested()
   @Type(() => CoordinatesDto)
   coordinates: CoordinatesDto;
 }
