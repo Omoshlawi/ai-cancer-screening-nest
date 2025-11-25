@@ -61,6 +61,36 @@ export class ClientsService {
                 ]
               : undefined,
           },
+          {
+            OR: findClientDto.search
+              ? [
+                  {
+                    firstName: {
+                      contains: findClientDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    lastName: {
+                      contains: findClientDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    phoneNumber: {
+                      contains: findClientDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    nationalId: {
+                      contains: findClientDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                ]
+              : undefined,
+          },
         ],
       },
       ...this.paginationService.buildPaginationQuery(findClientDto),

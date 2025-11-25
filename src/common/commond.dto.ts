@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { PaginationControls } from './common.types';
 
 class ZodFieldError {
   @ApiProperty({
@@ -97,4 +98,58 @@ export class PaginationDto {
   @IsInt()
   @Min(0)
   limit?: number;
+}
+
+export class PaginationControlsDto implements PaginationControls {
+  @ApiProperty({
+    description: 'The number of items per page',
+    example: 12,
+    minimum: 0,
+    required: false,
+  })
+  @IsInt()
+  pageSize: number;
+
+  @ApiProperty({
+    description: 'The total number of pages',
+    example: 10,
+    minimum: 0,
+    required: false,
+  })
+  @IsInt()
+  totalPages: number;
+
+  @ApiProperty({
+    description: 'The total number of items',
+    example: 100,
+    minimum: 0,
+    required: false,
+  })
+  @IsInt()
+  totalCount: number;
+
+  @ApiProperty({
+    description: 'The next page URL',
+    example: '/items?page=2&limit=12',
+    required: false,
+  })
+  @IsString()
+  next: string | null;
+
+  @ApiProperty({
+    description: 'The previous page URL',
+    example: '/items?page=1&limit=12',
+    required: false,
+  })
+  @IsString()
+  prev: string | null;
+
+  @ApiProperty({
+    description: 'The current page',
+    example: 1,
+    minimum: 1,
+    required: false,
+  })
+  @IsInt()
+  currentPage: number;
 }

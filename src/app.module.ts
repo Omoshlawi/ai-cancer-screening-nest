@@ -11,6 +11,7 @@ import { ClientsModule } from './clients/clients.module';
 import { ChpsModule } from './chps/chps.module';
 import { CommonModule } from './common/common.module';
 import { RequireCHPGuard } from './chps/chp.guards';
+import { ScreeningsModule } from './screenings/screenings.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { RequireCHPGuard } from './chps/chp.guards';
     AuthModule.forRoot(),
     ClientsModule,
     ChpsModule,
+    ScreeningsModule,
   ],
   controllers: [AppController],
   providers: [

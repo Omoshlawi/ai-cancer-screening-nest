@@ -161,6 +161,15 @@ export class UpdateClientDto {
 
 export class FindClientDto extends PaginationDto {
   @ApiProperty({
+    description: 'The search query by name or phone number or national ID',
+    example: 'John Doe',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  search: string;
+
+  @ApiProperty({
     description: 'The name of the client',
     example: 'John Doe',
   })
