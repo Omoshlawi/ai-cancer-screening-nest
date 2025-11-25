@@ -99,7 +99,7 @@ export class ScreenClientDto {
     enum: SmokingStatus,
   })
   @IsEnum(SmokingStatus)
-  smoke: SmokingStatus;
+  smoking: SmokingStatus;
 
   @ApiProperty({
     description:
