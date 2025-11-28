@@ -12,6 +12,7 @@ import { ChpsModule } from './chps/chps.module';
 import { CommonModule } from './common/common.module';
 import { RequireCHPGuard } from './chps/chp.guards';
 import { ScreeningsModule } from './screenings/screenings.module';
+import { FaqModule } from './faq/faq.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ScreeningsModule } from './screenings/screenings.module';
     ClientsModule,
     ChpsModule,
     ScreeningsModule,
+    FaqModule,
   ],
   controllers: [AppController],
   providers: [
