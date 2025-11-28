@@ -24,16 +24,13 @@ export enum RiskFactor {
 }
 
 export enum RiskInterpretation {
-  NO_RISK = 'NO_RISK',
-  VERY_LOW_RISK = 'VERY_LOW_RISK',
   LOW_RISK = 'LOW_RISK',
-  MODERATE_RISK = 'MODERATE_RISK',
+  MEDIUM_RISK = 'MEDIUM_RISK',
   HIGH_RISK = 'HIGH_RISK',
-  VERY_HIGH_RISK = 'VERY_HIGH_RISK',
 }
 
 export class RiskFactorScore {
-  @ApiProperty({ description: 'Factor' })
+  @ApiProperty({ description: 'Factor', enum: RiskFactor })
   @IsEnum(RiskFactor)
   factor: RiskFactor;
 

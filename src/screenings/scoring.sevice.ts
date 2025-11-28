@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import dayjs from 'dayjs';
 import { PrismaService } from '../prisma/prisma.service';
@@ -61,7 +58,7 @@ export class ScoringService {
     );
     const aggregateScore = this.deriveAggregateScore(breakdown);
     const interpretation = shouldAutoScreen
-      ? RiskInterpretation.VERY_HIGH_RISK
+      ? RiskInterpretation.HIGH_RISK
       : this.interpretScore(aggregateScore);
 
     return {
@@ -74,28 +71,17 @@ export class ScoringService {
   }
 
   private deriveAggregateScore(breakdown: RiskFactorScore[]): number {
-    let score = 0;
-    for (const factorScore of breakdown) {
-      score = Math.max(score, factorScore.score);
-    }
-    return score;
+    return breakdown.reduce((sum, factorScore) => sum + factorScore.score, 0);
   }
 
   private interpretScore(score: number): RiskInterpretation {
-    switch (score) {
-      case 0:
-        return RiskInterpretation.NO_RISK;
-      case 1:
-        return RiskInterpretation.VERY_LOW_RISK;
-      case 2:
-        return RiskInterpretation.LOW_RISK;
-      case 3:
-        return RiskInterpretation.MODERATE_RISK;
-      case 4:
-        return RiskInterpretation.HIGH_RISK;
-      default:
-        return RiskInterpretation.VERY_HIGH_RISK;
+    if (score <= 15) {
+      return RiskInterpretation.LOW_RISK;
     }
+    if (score >= 16 && score <= 18) {
+      return RiskInterpretation.MEDIUM_RISK;
+    }
+    return RiskInterpretation.HIGH_RISK;
   }
 
   private calculateAge(dateOfBirth: Date): number {
@@ -103,127 +89,190 @@ export class ScoringService {
   }
 
   private buildAgeScore(age: number | null): RiskFactorScore {
+    if (age === null) {
+      return {
+        factor: RiskFactor.AGE,
+        score: 0,
+        reason: 'Age unavailable',
+      };
+    }
+
+    // Only one age category can have response = 1, others are 0
+    // Weight × Response (0 or 1)
+    let weight = 0;
+    let ageRange = '';
+
+    if (age >= 25 && age <= 29) {
+      weight = 3;
+      ageRange = '25-29';
+    } else if (age >= 30 && age <= 39) {
+      weight = 4;
+      ageRange = '30-39';
+    } else if (age >= 40 && age <= 55) {
+      weight = 5;
+      ageRange = '40-55';
+    } else if (age >= 56 && age <= 59) {
+      weight = 4;
+      ageRange = '56-59';
+    } else if (age >= 60 && age <= 65) {
+      weight = 4;
+      ageRange = '60-65';
+    }
+
+    // Response is 1 if age is in valid range, 0 otherwise
+    const response = weight > 0 ? 1 : 0;
+    const points = weight * response;
+
     return {
       factor: RiskFactor.AGE,
-      score: age !== null ? this.getAgeScore(age) : 0,
-      reason: age !== null ? `Client age is ${age}` : 'Age unavailable',
+      score: points,
+      reason:
+        points > 0
+          ? `Client age is ${age} (${ageRange} years)`
+          : `Client age is ${age} (outside screening range)`,
     };
   }
 
-  private getAgeScore(age: number): number {
-    if (age >= 25 && age <= 29) {
-      return 3;
-    }
-    if (age >= 30 && age <= 39) {
-      return 4;
-    }
-    if (age >= 40 && age <= 55) {
-      return 5;
-    }
-    if (age >= 56 && age <= 65) {
-      return 4;
-    }
-    return 0;
-  }
-
   private buildSexualDebutScore(firstIntercourseAge: number): RiskFactorScore {
-    const score = firstIntercourseAge < 18 ? 5 : 0;
+    // Weight: 5, Response: 1 if < 18, 0 otherwise
+    const weight = 5;
+    const response = firstIntercourseAge < 18 ? 1 : 0;
+    const points = weight * response;
+
     return {
       factor: RiskFactor.EARLY_SEXUAL_DEBUT,
-      score,
+      score: points,
       reason:
-        score === 0
-          ? 'First intercourse at or after 18 years'
-          : 'First intercourse before 18 years',
+        points > 0
+          ? 'First intercourse before 18 years'
+          : 'First intercourse at or after 18 years',
     };
   }
 
   private buildMultiplePartnersScore(partners: number): RiskFactorScore {
+    // Only one category can have response = 1
+    // Weight × Response (0 or 1)
+    let weight = 0;
+    let category = '';
+
+    if (partners <= 1) {
+      weight = 2;
+      category = '0-1';
+    } else if (partners >= 2 && partners <= 5) {
+      weight = 4;
+      category = '2-5';
+    } else if (partners >= 6) {
+      weight = 5;
+      category = '6+';
+    }
+
+    const response = 1; // Always 1 if we have a valid category
+    const points = weight * response;
+
     return {
       factor: RiskFactor.MULTIPLE_PARTNERS,
-      score: this.getPartnersScore(partners),
-      reason: `${partners} lifetime partners reported`,
+      score: points,
+      reason: `${partners} lifetime partners reported (${category})`,
     };
-  }
-
-  private getPartnersScore(partners: number): number {
-    if (partners <= 1) {
-      return 2;
-    }
-    if (partners <= 5) {
-      return 4;
-    }
-    return 5;
   }
 
   private buildParityScore(totalBirths: number): RiskFactorScore {
+    // Only one category can have response = 1
+    // Weight × Response (0 or 1)
+    let weight = 0;
+    let category = '';
+
+    if (totalBirths <= 2) {
+      weight = 2;
+      category = '0-2';
+    } else if (totalBirths >= 3 && totalBirths <= 5) {
+      weight = 3;
+      category = '3-5';
+    } else if (totalBirths >= 6) {
+      weight = 4;
+      category = '6+';
+    }
+
+    const response = 1; // Always 1 if we have a valid category
+    const points = weight * response;
+
     return {
       factor: RiskFactor.PARITY,
-      score: this.getParityScore(totalBirths),
-      reason: `${totalBirths} births reported`,
+      score: points,
+      reason: `${totalBirths} births reported (${category})`,
     };
-  }
-
-  private getParityScore(totalBirths: number): number {
-    if (totalBirths <= 2) {
-      return 2;
-    }
-    if (totalBirths <= 5) {
-      return 3;
-    }
-    return 4;
   }
 
   private buildNeverScreenedScore(
     everScreened: ScreenBoolean,
   ): RiskFactorScore {
+    // Weight: 3, Response: 1 if never screened, 0 otherwise
+    const weight = 3;
     const neverScreened =
       everScreened === ScreenBoolean.NO ||
       everScreened === ScreenBoolean.NOT_SURE;
+    const response = neverScreened ? 1 : 0;
+    const points = weight * response;
+
     return {
       factor: RiskFactor.NEVER_SCREENED,
-      score: neverScreened ? 3 : 0,
-      reason: neverScreened
-        ? 'Client has never been screened for cervical cancer'
-        : 'Client reports previous screening',
+      score: points,
+      reason:
+        points > 0
+          ? 'Client has never been screened for cervical cancer'
+          : 'Client reports previous screening',
     };
   }
 
   private buildOralContraceptiveScore(
     contraceptives: ScreenBoolean,
   ): RiskFactorScore {
+    // Weight: 2, Response: 1 if YES, 0 otherwise
+    const weight = 2;
+    const response = contraceptives === ScreenBoolean.YES ? 1 : 0;
+    const points = weight * response;
+
     return {
       factor: RiskFactor.ORAL_CONTRACEPTIVES,
-      score: contraceptives === ScreenBoolean.YES ? 2 : 0,
+      score: points,
       reason:
-        contraceptives === ScreenBoolean.YES
+        points > 0
           ? 'Used oral contraceptives for more than 5 years'
           : 'No long-term oral contraceptive use reported',
     };
   }
 
   private buildSmokingScore(smoking: SmokingStatus): RiskFactorScore {
-    const score = smoking === SmokingStatus.NEVER ? 0 : 4;
+    // Weight: 4, Response: 1 if current or past, 0 if never
+    const weight = 4;
+    const response = smoking === SmokingStatus.NEVER ? 0 : 1;
+    const points = weight * response;
+
     return {
       factor: RiskFactor.SMOKING,
-      score,
+      score: points,
       reason:
-        score === 0
-          ? 'No history of smoking'
-          : 'Current or past smoking history reported',
+        points > 0
+          ? 'Current or past smoking history reported'
+          : 'No history of smoking',
     };
   }
 
   private buildFamilyHistoryScore(
     familyHistory: ScreenBoolean,
   ): RiskFactorScore {
-    const positiveHistory = familyHistory === ScreenBoolean.YES;
+    // Weight: 3, Response: 1 if YES, 0 otherwise
+    const weight = 3;
+    const response = familyHistory === ScreenBoolean.YES ? 1 : 0;
+    const points = weight * response;
+
     return {
       factor: RiskFactor.FAMILY_HISTORY,
-      score: positiveHistory ? 3 : 0,
-      reason: positiveHistory
-        ? 'First-degree relative diagnosed with cervical cancer'
-        : 'No family history reported',
+      score: points,
+      reason:
+        points > 0
+          ? 'First-degree relative diagnosed with cervical cancer'
+          : 'No family history reported',
     };
   }
 
@@ -232,13 +281,18 @@ export class ScoringService {
     hpv: ScreenBoolean,
     sti: ScreenBoolean,
   ): RiskFactorScore {
+    // Weight: 5 (though auto-screen takes precedence), Response: 1 if positive, 0 otherwise
+    const weight = 5;
     const positive =
       hiv === ScreenBoolean.YES ||
       hpv === ScreenBoolean.YES ||
       sti === ScreenBoolean.YES;
+    const response = positive ? 1 : 0;
+    const points = weight * response;
+
     return {
       factor: RiskFactor.SEXUALLY_TRANSMITTED_INFECTION,
-      score: positive ? 5 : 0,
+      score: points,
       reason: positive
         ? 'Positive history of HIV/HPV/STI; auto screening recommended'
         : 'No reported history of HIV/HPV/STI',

@@ -168,3 +168,16 @@ enum SmokingStatus {
   NEVER
   PAST
 }
+
+
+model HealthFcility {
+  id String @id @default(cuid())
+  name String // Facility Name
+  address String
+  phoneNumber String // Contact Phone Number
+  email String // Contact Email
+  logo String // Facility Logo
+  coordinates Json // { latitude: number, longitude: number }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
