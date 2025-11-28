@@ -11,6 +11,7 @@ export const adminPluginAcl = createAccessControl({
   chp: ['create', 'list', 'update', 'delete'],
   clients: ['create', 'list', 'update', 'delete'],
   faq: ['create', 'update', 'delete'],
+  faqTopic: ['create', 'update', 'delete'],
   healthFacility: ['create', 'update', 'delete'],
 });
 
@@ -18,6 +19,7 @@ const adminRole = adminPluginAcl.newRole({
   chp: ['create', 'delete', 'list', 'update'],
   clients: ['list', 'update', 'delete'],
   faq: ['create', 'delete', 'update'],
+  faqTopic: ['create', 'delete', 'update'],
   ...adminAc.statements,
 });
 
@@ -25,12 +27,14 @@ const userRole = adminPluginAcl.newRole({
   chp: ['list'],
   clients: [],
   faq: [],
+  faqTopic: [],
   ...userAc.statements,
 });
 const chpRole = adminPluginAcl.newRole({
   chp: ['list'],
   clients: ['create', 'list', 'update', 'delete'],
   faq: [],
+  faqTopic: [],
   ...userAc.statements,
 });
 

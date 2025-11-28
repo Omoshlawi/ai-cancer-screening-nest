@@ -183,12 +183,26 @@ model HealthFacility {
   referrals   Referral[]
 }
 
+model FaqTopic {
+  id        String                    @id @default(cuid())
+  name      String
+  createdAt DateTime                  @default(now())
+  updatedAt DateTime                  @updatedAt
+  faqs      FrequentlyAskedQuestion[]
+
+  @@map("faq_topic")
+}
+
 model FrequentlyAskedQuestion {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   question  String
   answer    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  topicId   String?
+  topic     FaqTopic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("frequently_asked_question")
 }
 
 enum ReferralStatus {

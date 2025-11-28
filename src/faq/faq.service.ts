@@ -22,6 +22,10 @@ export class FaqService {
       data: {
         question: createFaqDto.question,
         answer: createFaqDto.answer,
+        topicId: createFaqDto.topicId ?? null,
+      },
+      include: {
+        topic: true,
       },
     });
   }
@@ -31,25 +35,35 @@ export class FaqService {
       typeof this.prismaService.frequentlyAskedQuestion.findMany
     > = {
       where: {
-        OR: findFaqDto.search
-          ? [
-              {
-                question: {
-                  contains: findFaqDto.search,
-                  mode: 'insensitive',
-                },
-              },
-              {
-                answer: {
-                  contains: findFaqDto.search,
-                  mode: 'insensitive',
-                },
-              },
-            ]
-          : undefined,
+        AND: [
+          {
+            topicId: findFaqDto.topicId ?? undefined,
+          },
+          {
+            OR: findFaqDto.search
+              ? [
+                  {
+                    question: {
+                      contains: findFaqDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    answer: {
+                      contains: findFaqDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                ]
+              : undefined,
+          },
+        ],
       },
       orderBy: {
         createdAt: 'desc',
+      },
+      include: {
+        topic: true,
       },
       ...this.paginationService.buildPaginationQuery(findFaqDto),
     };
@@ -70,6 +84,9 @@ export class FaqService {
   async findOne(id: string) {
     const faq = await this.prismaService.frequentlyAskedQuestion.findUnique({
       where: { id },
+      include: {
+        topic: true,
+      },
     });
     if (!faq) {
       throw new NotFoundException('FAQ not found');
@@ -79,9 +96,26 @@ export class FaqService {
 
   async update(id: string, updateFaqDto: UpdateFaqDto) {
     const faq = await this.findOne(id);
+    const updateData: {
+      question?: string;
+      answer?: string;
+      topicId?: string | null;
+    } = {};
+    if (updateFaqDto.question !== undefined) {
+      updateData.question = updateFaqDto.question;
+    }
+    if (updateFaqDto.answer !== undefined) {
+      updateData.answer = updateFaqDto.answer;
+    }
+    if (updateFaqDto.topicId !== undefined) {
+      updateData.topicId = updateFaqDto.topicId || null;
+    }
     return await this.prismaService.frequentlyAskedQuestion.update({
       where: { id: faq.id },
-      data: updateFaqDto,
+      data: updateData,
+      include: {
+        topic: true,
+      },
     });
   }
 

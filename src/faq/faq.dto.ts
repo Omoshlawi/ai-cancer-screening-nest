@@ -21,6 +21,15 @@ export class CreateFaqDto {
   @IsString()
   @MinLength(3)
   answer: string;
+
+  @ApiProperty({
+    description: 'The ID of the FAQ topic (optional)',
+    example: 'clx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  topicId?: string;
 }
 
 export class UpdateFaqDto {
@@ -42,6 +51,15 @@ export class UpdateFaqDto {
   @IsString()
   @MinLength(3)
   answer?: string;
+
+  @ApiProperty({
+    description: 'The ID of the FAQ topic (optional)',
+    example: 'clx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  topicId?: string;
 }
 
 export class FindFaqDto extends PaginationDto {
@@ -53,4 +71,13 @@ export class FindFaqDto extends PaginationDto {
   @IsString()
   @MinLength(1)
   search?: string;
+
+  @ApiProperty({
+    description: 'Filter FAQs by topic ID',
+    example: 'clx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  topicId?: string;
 }
