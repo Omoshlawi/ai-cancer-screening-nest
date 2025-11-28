@@ -70,7 +70,7 @@ export class ReferralService {
         appointmentTime: new Date(createReferralDto.appointmentTime),
         additionalNotes: createReferralDto.additionalNotes ?? null,
         healthFacilityId: createReferralDto.healthFacilityId,
-        status: createReferralDto.status ?? ReferralStatus.PENDING,
+        status: ReferralStatus.PENDING,
       },
       include: {
         screening: true,
@@ -178,7 +178,6 @@ export class ReferralService {
       appointmentTime?: Date;
       additionalNotes?: string | null;
       healthFacilityId?: string;
-      status?: ReferralStatus;
     } = {};
 
     if (updateReferralDto.appointmentTime !== undefined) {
@@ -204,13 +203,55 @@ export class ReferralService {
       updateData.healthFacilityId = updateReferralDto.healthFacilityId;
     }
 
-    if (updateReferralDto.status !== undefined) {
-      updateData.status = updateReferralDto.status;
+    return await this.prismaService.referral.update({
+      where: { id: referral.id },
+      data: updateData,
+      include: {
+        screening: true,
+        healthFacility: true,
+      },
+    });
+  }
+
+  async complete(id: string, user: UserSession['user']) {
+    const referral = await this.findOne(id, user);
+
+    if (referral.status === ReferralStatus.COMPLETED) {
+      throw new NotFoundException('Referral is already completed');
+    }
+
+    if (referral.status === ReferralStatus.CANCELLED) {
+      throw new NotFoundException('Cannot complete a cancelled referral');
     }
 
     return await this.prismaService.referral.update({
       where: { id: referral.id },
-      data: updateData,
+      data: {
+        status: ReferralStatus.COMPLETED,
+      },
+      include: {
+        screening: true,
+        healthFacility: true,
+      },
+    });
+  }
+
+  async cancel(id: string, user: UserSession['user']) {
+    const referral = await this.findOne(id, user);
+
+    if (referral.status === ReferralStatus.CANCELLED) {
+      throw new NotFoundException('Referral is already cancelled');
+    }
+
+    if (referral.status === ReferralStatus.COMPLETED) {
+      throw new NotFoundException('Cannot cancel a completed referral');
+    }
+
+    return await this.prismaService.referral.update({
+      where: { id: referral.id },
+      data: {
+        status: ReferralStatus.CANCELLED,
+      },
       include: {
         screening: true,
         healthFacility: true,

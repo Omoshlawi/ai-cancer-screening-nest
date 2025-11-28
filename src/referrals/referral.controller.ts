@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -81,6 +82,22 @@ export class ReferralController {
   @ApiOperation({ summary: 'Delete a referral by ID' })
   delete(@Param('id') id: string, @Session() session: UserSession) {
     return this.referralService.delete(id, session.user);
+  }
+
+  @Patch(':id/complete')
+  @ApiOkResponse({ type: ReferralResponseDto })
+  @ApiErrorsResponse()
+  @ApiOperation({ summary: 'Mark a referral as completed' })
+  complete(@Param('id') id: string, @Session() session: UserSession) {
+    return this.referralService.complete(id, session.user);
+  }
+
+  @Patch(':id/cancel')
+  @ApiOkResponse({ type: ReferralResponseDto })
+  @ApiErrorsResponse()
+  @ApiOperation({ summary: 'Cancel a referral' })
+  cancel(@Param('id') id: string, @Session() session: UserSession) {
+    return this.referralService.cancel(id, session.user);
   }
 }
 

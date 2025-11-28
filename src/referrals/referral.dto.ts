@@ -47,16 +47,6 @@ export class CreateReferralDto {
   @IsNotEmpty()
   @IsString()
   healthFacilityId: string;
-
-  @ApiProperty({
-    description: 'The status of the referral',
-    enum: ReferralStatus,
-    example: ReferralStatus.PENDING,
-    default: ReferralStatus.PENDING,
-  })
-  @IsOptional()
-  @IsEnum(ReferralStatus)
-  status?: ReferralStatus;
 }
 
 export class UpdateReferralDto {
@@ -86,16 +76,6 @@ export class UpdateReferralDto {
   @IsOptional()
   @IsString()
   healthFacilityId?: string;
-
-  @ApiProperty({
-    description: 'The status of the referral',
-    enum: ReferralStatus,
-    example: ReferralStatus.COMPLETED,
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(ReferralStatus)
-  status?: ReferralStatus;
 }
 
 export class FindReferralDto extends PaginationDto {
