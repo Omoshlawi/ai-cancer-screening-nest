@@ -10,9 +10,15 @@ import {
   Query,
 } from '@nestjs/common';
 import { FaqService } from './faq.service';
-import { CreateFaqDto, FindFaqDto, UpdateFaqDto } from './faq.dto';
+import {
+  CreateFaqDto,
+  FindFaqDto,
+  UpdateFaqDto,
+  FaqResponseDto,
+  FindFaqResponseDto,
+} from './faq.dto';
 import { ApiErrorsResponse, OriginalUrl } from '../common/common.decorators';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { OptionalAuth } from '@thallesp/nestjs-better-auth';
 import { RequireSystemPermission } from '../auth/auth.decorators';
 
@@ -21,6 +27,7 @@ export class FaqController {
   constructor(private readonly faqService: FaqService) {}
 
   @Post()
+  @ApiOkResponse({ type: FaqResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Create a new FAQ' })
   @RequireSystemPermission({
@@ -31,6 +38,7 @@ export class FaqController {
   }
 
   @Get()
+  @ApiOkResponse({ type: FindFaqResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get all FAQs' })
   @OptionalAuth()
@@ -39,6 +47,7 @@ export class FaqController {
   }
 
   @Get(':id')
+  @ApiOkResponse({ type: FaqResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get a FAQ by ID' })
   @OptionalAuth()
@@ -47,6 +56,7 @@ export class FaqController {
   }
 
   @Put(':id')
+  @ApiOkResponse({ type: FaqResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Update a FAQ by ID' })
   @RequireSystemPermission({
@@ -57,6 +67,7 @@ export class FaqController {
   }
 
   @Delete(':id')
+  @ApiOkResponse({ type: FaqResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Delete a FAQ by ID' })
   @RequireSystemPermission({

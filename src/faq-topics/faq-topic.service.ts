@@ -26,6 +26,9 @@ export class FaqTopicService {
       data: {
         name: createFaqTopicDto.name,
       },
+      include: {
+        faqs: true,
+      },
     });
   }
 
@@ -85,6 +88,9 @@ export class FaqTopicService {
     return await this.prismaService.faqTopic.update({
       where: { id: faqTopic.id },
       data: updateFaqTopicDto,
+      include: {
+        faqs: true,
+      },
     });
   }
 

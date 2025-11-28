@@ -14,9 +14,11 @@ import {
   CreateHealthFacilityDto,
   FindHealthFacilityDto,
   UpdateHealthFacilityDto,
+  HealthFacilityResponseDto,
+  FindHealthFacilityResponseDto,
 } from './health-facility.dto';
 import { ApiErrorsResponse, OriginalUrl } from '../common/common.decorators';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { OptionalAuth } from '@thallesp/nestjs-better-auth';
 import { RequireSystemPermission } from '../auth/auth.decorators';
 
@@ -25,6 +27,7 @@ export class HealthFacilityController {
   constructor(private readonly healthFacilityService: HealthFacilityService) {}
 
   @Post()
+  @ApiOkResponse({ type: HealthFacilityResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Create a new health facility' })
   @RequireSystemPermission({
@@ -35,6 +38,7 @@ export class HealthFacilityController {
   }
 
   @Get()
+  @ApiOkResponse({ type: FindHealthFacilityResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get all health facilities' })
   @OptionalAuth()
@@ -49,6 +53,7 @@ export class HealthFacilityController {
   }
 
   @Get(':id')
+  @ApiOkResponse({ type: HealthFacilityResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get a health facility by ID' })
   @OptionalAuth()
@@ -57,6 +62,7 @@ export class HealthFacilityController {
   }
 
   @Put(':id')
+  @ApiOkResponse({ type: HealthFacilityResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Update a health facility by ID' })
   @RequireSystemPermission({
@@ -70,6 +76,7 @@ export class HealthFacilityController {
   }
 
   @Delete(':id')
+  @ApiOkResponse({ type: HealthFacilityResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Delete a health facility by ID' })
   @RequireSystemPermission({

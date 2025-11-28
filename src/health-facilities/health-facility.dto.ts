@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PHONE_NUMBER_REGEX } from '../common/common.contants';
-import { PaginationDto } from '../common/commond.dto';
+import { PaginationDto, PaginationControlsDto } from '../common/commond.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { Matches } from 'class-validator';
 
@@ -172,4 +172,119 @@ export class FindHealthFacilityDto extends PaginationDto {
   @IsString()
   @IsEmail()
   email?: string;
+}
+
+export class ReferralItemResponseDto {
+  @ApiProperty({
+    description: 'The ID of the referral',
+    example: 'clx1234567890',
+  })
+  id: string;
+
+  @ApiProperty({ description: 'The screening ID', example: 'clx1234567890' })
+  screeningId: string;
+
+  @ApiProperty({
+    description: 'The appointment time',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  appointmentTime: Date;
+
+  @ApiProperty({
+    description: 'Additional notes',
+    example: 'Please bring your ID',
+    required: false,
+  })
+  additionalNotes: string | null;
+
+  @ApiProperty({
+    description: 'The health facility ID',
+    example: 'clx1234567890',
+  })
+  healthFacilityId: string;
+
+  @ApiProperty({ description: 'The referral status', example: 'PENDING' })
+  status: string;
+
+  @ApiProperty({
+    description: 'The creation date',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: 'The last update date',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  updatedAt: Date;
+}
+
+export class HealthFacilityResponseDto {
+  @ApiProperty({
+    description: 'The ID of the health facility',
+    example: 'clx1234567890',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'The name of the health facility',
+    example: 'Kenyatta National Hospital',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'The address of the health facility',
+    example: 'Hospital Road, Nairobi, Kenya',
+  })
+  address: string;
+
+  @ApiProperty({
+    description: 'The phone number of the health facility',
+    example: '+254712345678',
+  })
+  phoneNumber: string;
+
+  @ApiProperty({
+    description: 'The email of the health facility',
+    example: 'info@knh.ac.ke',
+  })
+  email: string;
+
+  @ApiProperty({
+    description: 'The logo URL of the health facility',
+    example: 'https://example.com/logo.png',
+  })
+  logo: string;
+
+  @ApiProperty({
+    description: 'Geolocation coordinates',
+    type: CoordinatesDto,
+  })
+  coordinates: CoordinatesDto;
+
+  @ApiProperty({
+    description: 'The list of referrals for this health facility',
+    type: [ReferralItemResponseDto],
+  })
+  referrals: ReferralItemResponseDto[];
+
+  @ApiProperty({
+    description: 'The creation date',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: 'The last update date',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  updatedAt: Date;
+}
+
+export class FindHealthFacilityResponseDto extends PaginationControlsDto {
+  @ApiProperty({
+    description: 'The list of health facilities',
+    type: [HealthFacilityResponseDto],
+  })
+  results: HealthFacilityResponseDto[];
 }

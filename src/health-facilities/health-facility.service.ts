@@ -31,6 +31,9 @@ export class HealthFacilityService {
         logo: createHealthFacilityDto.logo,
         coordinates: createHealthFacilityDto.coordinates as any,
       },
+      include: {
+        referrals: true,
+      },
     });
   }
 
@@ -115,6 +118,9 @@ export class HealthFacilityService {
       data: {
         ...updateHealthFacilityDto,
         coordinates: updateHealthFacilityDto.coordinates as any,
+      },
+      include: {
+        referrals: true,
       },
     });
   }
