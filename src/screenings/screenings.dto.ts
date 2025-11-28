@@ -1,20 +1,21 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { JsonValue } from '@prisma/client/runtime/library';
+import { Type } from 'class-transformer';
 import {
-  IsString,
+  IsDateString,
   IsEnum,
   IsInt,
-  IsNumber,
   IsLatitude,
   IsLongitude,
-  IsDateString,
-  IsOptional,
-  ValidateNested,
   IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { Screening } from '../../generated/prisma/client';
-import { JsonValue } from '@prisma/client/runtime/library';
 import { PaginationControlsDto } from '../common/commond.dto';
-import { ApiProperty } from '@nestjs/swagger';
+import { ScoringResult } from './scoring.dto';
 
 export enum ScreenBoolean {
   YES = 'YES',
@@ -154,6 +155,12 @@ export class FindScreeningsDto {
 }
 
 export class ScreeningDto implements Screening {
+  @ApiProperty({ description: 'Scoring result', type: ScoringResult })
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => ScoringResult)
+  scoringResult: JsonValue;
+
   @ApiProperty({
     description: 'The CUID of the screening',
   })

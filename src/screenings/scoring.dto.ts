@@ -1,3 +1,16 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+
 export enum RiskFactor {
   AGE = 'AGE',
   EARLY_SEXUAL_DEBUT = 'EARLY_SEXUAL_DEBUT',
@@ -19,16 +32,49 @@ export enum RiskInterpretation {
   VERY_HIGH_RISK = 'VERY_HIGH_RISK',
 }
 
-export type RiskFactorScore = {
+export class RiskFactorScore {
+  @ApiProperty({ description: 'Factor' })
+  @IsEnum(RiskFactor)
   factor: RiskFactor;
-  score: number;
-  reason: string;
-};
 
-export type ScoringResult = {
+  @ApiProperty({ description: 'Score' })
+  @IsNumber()
+  @Type(() => Number)
+  score: number;
+
+  @ApiProperty({ description: 'Reason' })
+  @IsString()
+  @Type(() => String)
+  reason: string;
+}
+
+export class ScoringResult {
+  @ApiProperty({ description: 'Client age' })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
   clientAge: number | null;
+
+  @ApiProperty({
+    description: 'Breakdown of the scoring result',
+    type: RiskFactorScore,
+    isArray: true,
+  })
+  @IsArray()
+  @IsNotEmpty({ each: true })
+  @ValidateNested({ each: true })
+  @Type(() => RiskFactorScore)
   breakdown: RiskFactorScore[];
+
+  @ApiProperty({ description: 'Aggregate score' })
+  @IsNumber()
   aggregateScore: number;
+  @ApiProperty({ description: 'Interpretation' })
+  @IsEnum(RiskInterpretation)
   interpretation: RiskInterpretation;
+
+  @ApiProperty({ description: 'Should auto screen' })
+  @IsBoolean()
+  @Type(() => Boolean)
   shouldAutoScreen: boolean;
-};
+}

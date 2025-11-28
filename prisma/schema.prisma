@@ -93,17 +93,17 @@ model Jwks {
 }
 
 model CommunityHealthProvider {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String      @id @default(cuid())
+  userId      String      @unique
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   firstName   String
   lastName    String
   phoneNumber String
   clients     Client[]
-  screenings Screening[]
+  screenings  Screening[]
 
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Client {
@@ -149,8 +149,9 @@ model Screening {
   totalBirths                             Int
   everScreenedForCervicalCancer           ScreenBoolean
   usedOralContraceptivesForMoreThan5Years ScreenBoolean
-  smoking                           SmokingStatus
+  smoking                                 SmokingStatus
   familyMemberDiagnosedWithCervicalCancer ScreenBoolean
+  scoringResult                           Json? // { clientAge: number | null, breakdown: RiskFactorScore[], aggregateScore: number, interpretation: RiskInterpretation, shouldAutoScreen: boolean }
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

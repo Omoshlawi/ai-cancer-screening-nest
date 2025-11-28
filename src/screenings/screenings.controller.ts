@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, Session } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Session,
+} from '@nestjs/common';
 import { RequireChp } from '../chps/chp.decorators';
 import { ScreeningsService } from './screenings.service';
 import {
@@ -43,5 +51,14 @@ export class ScreeningsController {
     @Session() session: UserSession,
   ) {
     return this.screeningsService.create(screenClientDto, session.user);
+  }
+
+  @Get(':id')
+  @ApiErrorsResponse()
+  @ApiOperation({ summary: 'Get a screening by ID' })
+  @ApiOkResponse({ type: ScreeningDto })
+  @ApiErrorsResponse()
+  findOne(@Param('id') id: string) {
+    return this.screeningsService.findOne(id);
   }
 }
