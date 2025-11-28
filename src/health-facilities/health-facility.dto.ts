@@ -85,6 +85,15 @@ export class CreateHealthFacilityDto {
   @ValidateNested()
   @Type(() => CoordinatesDto)
   coordinates: CoordinatesDto;
+
+  @ApiProperty({
+    description: 'The ID of the health facility type (optional)',
+    example: 'clx1234567890',
+    required: true,
+  })
+  @IsOptional()
+  @IsString()
+  typeId: string;
 }
 
 export class UpdateHealthFacilityDto {
@@ -143,6 +152,15 @@ export class UpdateHealthFacilityDto {
   @ValidateNested()
   @Type(() => CoordinatesDto)
   coordinates?: CoordinatesDto;
+
+  @ApiProperty({
+    description: 'The ID of the health facility type (optional)',
+    example: 'clx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  typeId?: string;
 }
 
 export class FindHealthFacilityDto extends PaginationDto {
@@ -219,6 +237,28 @@ export class ReferralItemResponseDto {
   updatedAt: Date;
 }
 
+export class HealthFacilityTypeItemResponseDto {
+  @ApiProperty({
+    description: 'The ID of the health facility type',
+    example: 'clx1234567890',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'The name of the health facility type',
+    example: 'Hospital',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'The description of the health facility type',
+    example:
+      'A large medical facility providing comprehensive healthcare services',
+    required: false,
+  })
+  description: string | null;
+}
+
 export class HealthFacilityResponseDto {
   @ApiProperty({
     description: 'The ID of the health facility',
@@ -261,6 +301,20 @@ export class HealthFacilityResponseDto {
     type: CoordinatesDto,
   })
   coordinates: CoordinatesDto;
+
+  @ApiProperty({
+    description: 'The type ID (optional)',
+    example: 'clx1234567890',
+    required: false,
+  })
+  typeId: string | null;
+
+  @ApiProperty({
+    description: 'The health facility type (if associated)',
+    type: HealthFacilityTypeItemResponseDto,
+    required: false,
+  })
+  type: HealthFacilityTypeItemResponseDto | null;
 
   @ApiProperty({
     description: 'The list of referrals for this health facility',

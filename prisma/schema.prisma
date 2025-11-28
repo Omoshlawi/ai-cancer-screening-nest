@@ -170,16 +170,29 @@ enum SmokingStatus {
   PAST
 }
 
+model HealthFacilityType {
+  id               String           @id @default(cuid())
+  name             String
+  description      String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  healthFacilities HealthFacility[]
+
+  @@map("health_facility_type")
+}
+
 model HealthFacility {
-  id          String     @id @default(cuid())
+  id          String             @id @default(cuid())
   name        String // Facility Name
   address     String
   phoneNumber String // Contact Phone Number
   email       String // Contact Email
   logo        String // Facility Logo
   coordinates Json // { latitude: number, longitude: number }
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  typeId      String
+  type        HealthFacilityType @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
   referrals   Referral[]
 }
 

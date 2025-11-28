@@ -96,23 +96,9 @@ export class FaqService {
 
   async update(id: string, updateFaqDto: UpdateFaqDto) {
     const faq = await this.findOne(id);
-    const updateData: {
-      question?: string;
-      answer?: string;
-      topicId?: string | null;
-    } = {};
-    if (updateFaqDto.question !== undefined) {
-      updateData.question = updateFaqDto.question;
-    }
-    if (updateFaqDto.answer !== undefined) {
-      updateData.answer = updateFaqDto.answer;
-    }
-    if (updateFaqDto.topicId !== undefined) {
-      updateData.topicId = updateFaqDto.topicId || null;
-    }
     return await this.prismaService.frequentlyAskedQuestion.update({
       where: { id: faq.id },
-      data: updateData,
+      data: updateFaqDto,
       include: {
         topic: true,
       },

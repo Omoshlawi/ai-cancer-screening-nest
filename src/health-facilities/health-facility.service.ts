@@ -30,9 +30,11 @@ export class HealthFacilityService {
         email: createHealthFacilityDto.email,
         logo: createHealthFacilityDto.logo,
         coordinates: createHealthFacilityDto.coordinates as any,
+        typeId: createHealthFacilityDto.typeId,
       },
       include: {
         referrals: true,
+        type: true,
       },
     });
   }
@@ -81,6 +83,7 @@ export class HealthFacilityService {
       },
       include: {
         referrals: true,
+        type: true,
       },
       ...this.paginationService.buildPaginationQuery(findHealthFacilityDto),
     };
@@ -103,6 +106,7 @@ export class HealthFacilityService {
       where: { id },
       include: {
         referrals: true,
+        type: true,
       },
     });
     if (!healthFacility) {
@@ -117,10 +121,14 @@ export class HealthFacilityService {
       where: { id: healthFacility.id },
       data: {
         ...updateHealthFacilityDto,
-        coordinates: updateHealthFacilityDto.coordinates as any,
+        typeId: updateHealthFacilityDto.typeId ?? healthFacility.typeId,
+        coordinates:
+          updateHealthFacilityDto.coordinates ??
+          (healthFacility.coordinates as any),
       },
       include: {
         referrals: true,
+        type: true,
       },
     });
   }
