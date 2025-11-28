@@ -153,8 +153,9 @@ model Screening {
   familyMemberDiagnosedWithCervicalCancer ScreenBoolean
   scoringResult                           Json? // { clientAge: number | null, breakdown: RiskFactorScore[], aggregateScore: number, interpretation: RiskInterpretation, shouldAutoScreen: boolean }
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  referrals Referral[]
 }
 
 enum ScreenBoolean {
@@ -169,15 +170,42 @@ enum SmokingStatus {
   PAST
 }
 
-
-model HealthFcility {
-  id String @id @default(cuid())
-  name String // Facility Name
-  address String
+model HealthFacility {
+  id          String     @id @default(cuid())
+  name        String // Facility Name
+  address     String
   phoneNumber String // Contact Phone Number
-  email String // Contact Email
-  logo String // Facility Logo
+  email       String // Contact Email
+  logo        String // Facility Logo
   coordinates Json // { latitude: number, longitude: number }
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  referrals   Referral[]
+}
+
+model FrequentlyAskedQuestion {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model Referral {
+  id               String         @id @default(cuid())
+  screeningId      String
+  screening        Screening      @relation(fields: [screeningId], references: [id], onDelete: Cascade)
+  appointmentTime  DateTime
+  additionalNotes  String?
+  healthFacilityId String
+  healthFacility   HealthFacility @relation(fields: [healthFacilityId], references: [id], onDelete: Cascade)
+  status           ReferralStatus
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }
