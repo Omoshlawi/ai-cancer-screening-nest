@@ -13,6 +13,7 @@ import { CommonModule } from './common/common.module';
 import { RequireCHPGuard } from './chps/chp.guards';
 import { ScreeningsModule } from './screenings/screenings.module';
 import { FaqModule } from './faq/faq.module';
+import { HealthFacilityModule } from './health-facilities/health-facility.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { FaqModule } from './faq/faq.module';
     ChpsModule,
     ScreeningsModule,
     FaqModule,
+    HealthFacilityModule,
   ],
   controllers: [AppController],
   providers: [
