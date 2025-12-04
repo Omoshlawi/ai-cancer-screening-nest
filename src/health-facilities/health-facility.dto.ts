@@ -190,6 +190,14 @@ export class FindHealthFacilityDto extends PaginationDto {
   @IsString()
   @IsEmail()
   email?: string;
+
+  @ApiProperty({
+    description: 'The type ID of the health facility',
+    example: 'clx1234567890',
+  })
+  @IsOptional()
+  @IsString()
+  typeId?: string;
 }
 
 export class ReferralItemResponseDto {

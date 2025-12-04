@@ -41,10 +41,14 @@ export class ScreeningsService {
             ? undefined
             : (findScreeningsDto.providerId ?? chp.id),
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
         client: true,
         provider: true,
       },
+      ...this.paginationService.buildPaginationQuery(findScreeningsDto),
     };
     const [data, totalCount] = await Promise.all([
       this.prismaService.screening.findMany(dbQuery),

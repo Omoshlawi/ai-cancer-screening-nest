@@ -51,6 +51,7 @@ export class HealthFacilityService {
           {
             name: findHealthFacilityDto.name ?? undefined,
             email: findHealthFacilityDto.email ?? undefined,
+            typeId: findHealthFacilityDto.typeId ?? undefined,
           },
           {
             OR: findHealthFacilityDto.search

@@ -87,6 +87,9 @@ export class ChpsService {
           },
         ],
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
       ...this.paginationService.buildPaginationQuery(findChpDto),
     };
     const [data, totalCount] = await Promise.all([

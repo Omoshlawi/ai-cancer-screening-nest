@@ -93,6 +93,9 @@ export class ClientsService {
           },
         ],
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
       ...this.paginationService.buildPaginationQuery(findClientDto),
     };
     const [data, totalCount] = await Promise.all([
