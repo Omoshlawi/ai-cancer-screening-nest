@@ -11,6 +11,7 @@ import { Type } from 'class-transformer';
 import { PHONE_NUMBER_REGEX } from '../common/common.contants';
 import { PaginationDto } from '../common/commond.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import { RiskInterpretation } from '../screenings/scoring.dto';
 
 // Kenyan phone number regex: matches numbers in form +2547XXXXXXXX or 07XXXXXXXX
 
@@ -192,4 +193,13 @@ export class FindClientDto extends PaginationDto {
   @IsOptional()
   @IsString()
   nationalId: string;
+
+  @ApiProperty({
+    description: 'Filter by latest screening risk interpretation',
+    enum: RiskInterpretation,
+    example: RiskInterpretation.HIGH_RISK,
+  })
+  @IsOptional()
+  @IsEnum(RiskInterpretation)
+  risk?: RiskInterpretation;
 }

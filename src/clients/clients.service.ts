@@ -67,6 +67,12 @@ export class ClientsService {
           {
             phoneNumber: findClientDto.phoneNumber ?? undefined,
             nationalId: findClientDto.nationalId ?? undefined,
+            metadata: findClientDto.risk
+              ? {
+                  path: ['riskInterpretation'],
+                  equals: findClientDto.risk,
+                }
+              : undefined,
           },
           {
             OR: findClientDto.name

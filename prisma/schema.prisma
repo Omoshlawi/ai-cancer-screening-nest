@@ -119,6 +119,7 @@ model Client {
   createdById   String
   createdBy     CommunityHealthProvider @relation(fields: [createdById], references: [id], onDelete: Cascade)
   screenings    Screening[]
+  metadata       Json? // { riskInterpretation: RiskInterpretation, riskScore: number }
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -102,6 +102,17 @@ export class ScreeningsService {
       },
     });
 
+    // Update client metadata with latest screening interpretation and score
+    await this.prismaService.client.update({
+      where: { id: screenClientDto.clientId },
+      data: {
+        metadata: {
+          riskInterpretation: scoringResult.interpretation,
+          riskScore: scoringResult.aggregateScore,
+        },
+      },
+    });
+
     // Track activity
     await this.activitiesService.trackActivity(
       user.id,
