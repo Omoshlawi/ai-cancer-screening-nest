@@ -15,7 +15,7 @@ import {
 } from 'class-validator';
 import { Screening } from '../../generated/prisma/client';
 import { PaginationControlsDto } from '../common/commond.dto';
-import { ScoringResult } from './scoring.dto';
+import { RiskInterpretation, ScoringResult } from './scoring.dto';
 
 export enum ScreenBoolean {
   YES = 'YES',
@@ -168,6 +168,16 @@ export class FindScreeningsDto {
   @IsOptional()
   @IsDateString()
   screeningDateTo?: Date;
+
+  @ApiProperty({
+    description: 'Filter screenings by risk interpretation',
+    enum: RiskInterpretation,
+    required: false,
+    example: RiskInterpretation.HIGH_RISK,
+  })
+  @IsOptional()
+  @IsEnum(RiskInterpretation)
+  risk?: RiskInterpretation;
 }
 
 export class ScreeningDto implements Screening {

@@ -46,6 +46,12 @@ export class ScreeningsService {
           gte: findScreeningsDto.screeningDateFrom ?? undefined,
           lte: findScreeningsDto.screeningDateTo ?? undefined,
         },
+        scoringResult: findScreeningsDto.risk
+          ? {
+              path: ['interpretation'],
+              equals: findScreeningsDto.risk,
+            }
+          : undefined,
       },
       orderBy: {
         createdAt: 'desc',
