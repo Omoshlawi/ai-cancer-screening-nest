@@ -1,8 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {
   ForbiddenException,
   Injectable,
@@ -100,7 +96,8 @@ export class ReferralService {
         AND: [
           {
             screening: {
-              providerId: chp.id, // Only show referrals for this CHP's screenings
+              providerId: findReferralDto.providerId ?? chp.id,
+              clientId: findReferralDto.clientId ?? undefined,
             },
           },
           {
@@ -148,7 +145,12 @@ export class ReferralService {
     const referral = await this.prismaService.referral.findUnique({
       where: { id },
       include: {
-        screening: true,
+        screening: {
+          include: {
+            client: true,
+            provider: true,
+          },
+        },
         healthFacility: true,
       },
     });
@@ -207,7 +209,12 @@ export class ReferralService {
       where: { id: referral.id },
       data: updateData,
       include: {
-        screening: true,
+        screening: {
+          include: {
+            client: true,
+            provider: true,
+          },
+        },
         healthFacility: true,
       },
     });

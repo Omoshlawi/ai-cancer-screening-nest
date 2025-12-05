@@ -16,6 +16,8 @@ import {
   UpdateHealthFacilityDto,
   HealthFacilityResponseDto,
   FindHealthFacilityResponseDto,
+  FindNearestHealthFacilityDto,
+  NearestHealthFacilityResponseDto,
 } from './health-facility.dto';
 import { ApiErrorsResponse, OriginalUrl } from '../common/common.decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
@@ -50,6 +52,19 @@ export class HealthFacilityController {
       findHealthFacilityDto,
       originalUrl,
     );
+  }
+
+  @Get('nearest')
+  @ApiOkResponse({ type: NearestHealthFacilityResponseDto })
+  @ApiErrorsResponse()
+  @ApiOperation({
+    summary: 'Find the nearest health facility to given coordinates',
+  })
+  @OptionalAuth()
+  findNearest(
+    @Query() findNearestHealthFacilityDto: FindNearestHealthFacilityDto,
+  ) {
+    return this.healthFacilityService.findNearest(findNearestHealthFacilityDto);
   }
 
   @Get(':id')

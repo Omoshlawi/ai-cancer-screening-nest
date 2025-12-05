@@ -40,6 +40,10 @@ export class ScreeningsService {
           findScreeningsDto.includeForAllProviders === StringBoolean.TRUE
             ? undefined
             : (findScreeningsDto.providerId ?? chp.id),
+        createdAt: {
+          gte: findScreeningsDto.screeningDateFrom ?? undefined,
+          lte: findScreeningsDto.screeningDateTo ?? undefined,
+        },
       },
       orderBy: {
         createdAt: 'desc',

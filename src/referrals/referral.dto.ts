@@ -80,6 +80,24 @@ export class UpdateReferralDto {
 
 export class FindReferralDto extends PaginationDto {
   @ApiProperty({
+    description: 'Filter referrals by client ID',
+    example: 'clx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  clientId?: string;
+
+  @ApiProperty({
+    description: 'Filter referrals by provider ID',
+    example: 'clx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  providerId?: string;
+
+  @ApiProperty({
     description: 'Filter referrals by screening ID',
     example: 'clx1234567890',
     required: false,

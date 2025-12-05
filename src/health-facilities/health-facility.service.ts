@@ -1,8 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { pick } from 'lodash';
 import { FunctionFirstArgument } from '../common/common.types';
@@ -12,6 +8,7 @@ import {
   CreateHealthFacilityDto,
   FindHealthFacilityDto,
   UpdateHealthFacilityDto,
+  FindNearestHealthFacilityDto,
 } from './health-facility.dto';
 
 @Injectable()
@@ -139,5 +136,72 @@ export class HealthFacilityService {
     return await this.prismaService.healthFacility.delete({
       where: { id: healthFacility.id },
     });
+  }
+
+  async findNearest(
+    findNearestHealthFacilityDto: FindNearestHealthFacilityDto,
+  ) {
+    const { lat, lng } = findNearestHealthFacilityDto;
+
+    // Use raw SQL query with Haversine formula for efficient distance calculation
+    // This is much more efficient than loading all facilities and calculating in application code
+    const result = await this.prismaService.$queryRaw<
+      Array<{
+        id: string;
+        name: string;
+        address: string;
+        phoneNumber: string;
+        email: string;
+        logo: string;
+        coordinates: { latitude: number; longitude: number };
+        typeId: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        distanceKm: number;
+      }>
+    >`
+      SELECT 
+        hf.*,
+        (
+          6371 * acos(
+            cos(radians(${lat})) *
+            cos(radians((hf.coordinates->>'latitude')::float)) *
+            cos(radians((hf.coordinates->>'longitude')::float) - radians(${lng})) +
+            sin(radians(${lat})) *
+            sin(radians((hf.coordinates->>'latitude')::float))
+          )
+        ) AS "distanceKm"
+      FROM "HealthFacility" hf
+      WHERE hf.coordinates IS NOT NULL
+        AND hf.coordinates->>'latitude' IS NOT NULL
+        AND hf.coordinates->>'longitude' IS NOT NULL
+      ORDER BY "distanceKm" ASC
+      LIMIT 1
+    `;
+
+    if (!result || result.length === 0) {
+      throw new NotFoundException('No health facility found');
+    }
+
+    const nearestFacility = result[0];
+
+    // Fetch related data (type and referrals) using Prisma
+    const facilityWithRelations =
+      await this.prismaService.healthFacility.findUnique({
+        where: { id: nearestFacility.id },
+        include: {
+          referrals: true,
+          type: true,
+        },
+      });
+
+    if (!facilityWithRelations) {
+      throw new NotFoundException('Health facility not found');
+    }
+
+    return {
+      ...facilityWithRelations,
+      distanceKm: Number(nearestFacility.distanceKm.toFixed(2)),
+    };
   }
 }

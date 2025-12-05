@@ -152,6 +152,22 @@ export class FindScreeningsDto {
   @IsOptional()
   @IsEnum(StringBoolean)
   includeForAllProviders?: StringBoolean; // Only for super users
+
+  @ApiProperty({
+    description: 'Filter screenings by date from',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  screeningDateFrom?: Date;
+
+  @ApiProperty({
+    description: 'Filter screenings by date to',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  screeningDateTo?: Date;
 }
 
 export class ScreeningDto implements Screening {

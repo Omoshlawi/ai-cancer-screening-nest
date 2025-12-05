@@ -200,6 +200,28 @@ export class FindHealthFacilityDto extends PaginationDto {
   typeId?: string;
 }
 
+export class FindNearestHealthFacilityDto {
+  @ApiProperty({
+    description: 'Latitude of the location',
+    example: -1.2921,
+  })
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  @IsLatitude()
+  lat: number;
+
+  @ApiProperty({
+    description: 'Longitude of the location',
+    example: 36.8219,
+  })
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  @IsLongitude()
+  lng: number;
+}
+
 export class ReferralItemResponseDto {
   @ApiProperty({
     description: 'The ID of the referral',
@@ -341,6 +363,14 @@ export class HealthFacilityResponseDto {
     example: '2024-01-01T00:00:00.000Z',
   })
   updatedAt: Date;
+}
+
+export class NearestHealthFacilityResponseDto extends HealthFacilityResponseDto {
+  @ApiProperty({
+    description: 'Distance to the health facility in kilometers',
+    example: 5.2,
+  })
+  distanceKm: number;
 }
 
 export class FindHealthFacilityResponseDto extends PaginationControlsDto {
