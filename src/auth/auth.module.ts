@@ -19,6 +19,7 @@ import {
   createAuthMiddleware,
   jwt,
   openAPI,
+  twoFactor,
   username,
 } from 'better-auth/plugins';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -94,6 +95,7 @@ export class AuthModule {
               bearer(),
               openAPI(),
               jwt(),
+              twoFactor(),
             ],
             advanced: { disableOriginCheck: true },
             hooks,

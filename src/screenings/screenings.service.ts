@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { pick } from 'lodash';
-import { PaginationService } from 'src/common/pagination.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PaginationService } from '../common/pagination.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { ActivitiesService } from '../activities/activities.service';
 import { UserSession } from '../auth/auth.types';
 import { FunctionFirstArgument } from '../common/common.types';

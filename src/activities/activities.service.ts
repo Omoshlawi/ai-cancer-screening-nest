@@ -6,7 +6,7 @@
 import { Injectable } from '@nestjs/common';
 import { pick } from 'lodash';
 import { PaginationService } from '../common/pagination.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { FunctionFirstArgument } from '../common/common.types';
 import { CreateActivityDto, FindActivitiesDto } from './activities.dto';
 

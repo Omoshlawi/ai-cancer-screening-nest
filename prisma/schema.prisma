@@ -33,6 +33,9 @@ model User {
   communityHealthProvider CommunityHealthProvider?
   activities              UserActivity[]
 
+  twoFactorEnabled Boolean?    @default(false)
+  twofactors       TwoFactor[]
+
   @@unique([email])
   @@unique([username])
   @@map("user")
@@ -52,6 +55,7 @@ model Session {
 
   @@unique([token])
   @@map("session")
+  @@index([userId])
 }
 
 model Account {
@@ -71,6 +75,7 @@ model Account {
   updatedAt             DateTime  @updatedAt
 
   @@map("account")
+  @@index([userId])
 }
 
 model Verification {
@@ -82,6 +87,7 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+  @@index([identifier])
 }
 
 model Jwks {
@@ -119,7 +125,7 @@ model Client {
   createdById   String
   createdBy     CommunityHealthProvider @relation(fields: [createdById], references: [id], onDelete: Cascade)
   screenings    Screening[]
-  metadata       Json? // { riskInterpretation: RiskInterpretation, riskScore: number }
+  metadata      Json? // { riskInterpretation: RiskInterpretation, riskScore: number }
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -256,4 +262,14 @@ model UserActivity {
   @@index([createdAt])
   @@index([resource, resourceId])
   @@map("user_activity")
+}
+
+model TwoFactor {
+  id          String @id
+  secret      String
+  backupCodes String
+  userId      String
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("twoFactor")
 }

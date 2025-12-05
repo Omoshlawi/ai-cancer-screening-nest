@@ -8,7 +8,7 @@ import { CreateChpDto, FindChpDto } from './chp.dto';
 import { AuthService } from '@thallesp/nestjs-better-auth';
 import type { BetterAuthWithPlugins } from '../auth/auth.types';
 import { PaginationService } from '../common/pagination.service';
-import { FunctionFirstArgument } from 'src/common/common.types';
+import { FunctionFirstArgument } from '../common/common.types';
 import { pick } from 'lodash';
 
 @Injectable()
