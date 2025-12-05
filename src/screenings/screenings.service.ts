@@ -3,15 +3,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { pick } from 'lodash';
 import { PaginationService } from 'src/common/pagination.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ActivitiesService } from '../activities/activities.service';
 import { UserSession } from '../auth/auth.types';
 import { FunctionFirstArgument } from '../common/common.types';
+import { ScoringService } from './scoring.sevice';
 import {
   FindScreeningsDto,
   ScreenClientDto,
   StringBoolean,
 } from './screenings.dto';
-import { ScoringService } from './scoring.sevice';
-import { ActivitiesService } from '../activities/activities.service';
 
 @Injectable()
 export class ScreeningsService {
@@ -113,6 +113,8 @@ export class ScreeningsService {
           clientId: screening.clientId,
           clientName: `${screening.client.firstName} ${screening.client.lastName}`,
           screeningId: screening.id,
+          riskScore: scoringResult.aggregateScore,
+          riskInterpretation: scoringResult.interpretation,
         },
       },
       ipAddress,

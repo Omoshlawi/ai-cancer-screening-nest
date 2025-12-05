@@ -16,6 +16,7 @@ import {
   UpdateReferralDto,
 } from './referral.dto';
 import { ActivitiesService } from '../activities/activities.service';
+import { ScoringResult } from '../screenings/scoring.dto';
 
 @Injectable()
 export class ReferralService {
@@ -86,6 +87,7 @@ export class ReferralService {
     });
 
     // Track activity
+    const scoringResult = screening.scoringResult as unknown as ScoringResult;
     await this.activitiesService.trackActivity(
       user.id,
       {
@@ -98,6 +100,8 @@ export class ReferralService {
           clientName: `${screening.client.firstName} ${screening.client.lastName}`,
           healthFacilityId: referral.healthFacilityId,
           healthFacilityName: healthFacility.name,
+          riskScore: scoringResult.aggregateScore,
+          riskInterpretation: scoringResult.interpretation,
         },
       },
       ipAddress,
@@ -254,6 +258,8 @@ export class ReferralService {
     });
 
     // Track activity
+    const scoringResult = updatedReferral.screening
+      .scoringResult as unknown as ScoringResult;
     await this.activitiesService.trackActivity(
       user.id,
       {
@@ -266,6 +272,8 @@ export class ReferralService {
           clientName: `${updatedReferral.screening.client.firstName} ${updatedReferral.screening.client.lastName}`,
           healthFacilityId: updatedReferral.healthFacilityId,
           healthFacilityName: updatedReferral.healthFacility.name,
+          riskScore: scoringResult.aggregateScore,
+          riskInterpretation: scoringResult.interpretation,
         },
       },
       ipAddress,
@@ -307,6 +315,8 @@ export class ReferralService {
     });
 
     // Track activity
+    const scoringResult = completedReferral.screening
+      .scoringResult as unknown as ScoringResult;
     await this.activitiesService.trackActivity(
       user.id,
       {
@@ -319,6 +329,8 @@ export class ReferralService {
           clientName: `${completedReferral.screening.client.firstName} ${completedReferral.screening.client.lastName}`,
           healthFacilityId: completedReferral.healthFacilityId,
           healthFacilityName: completedReferral.healthFacility.name,
+          riskScore: scoringResult.aggregateScore,
+          riskInterpretation: scoringResult.interpretation,
         },
       },
       ipAddress,
@@ -360,6 +372,8 @@ export class ReferralService {
     });
 
     // Track activity
+    const scoringResult = cancelledReferral.screening
+      .scoringResult as unknown as ScoringResult;
     await this.activitiesService.trackActivity(
       user.id,
       {
@@ -372,6 +386,8 @@ export class ReferralService {
           clientName: `${cancelledReferral.screening.client.firstName} ${cancelledReferral.screening.client.lastName}`,
           healthFacilityId: cancelledReferral.healthFacilityId,
           healthFacilityName: cancelledReferral.healthFacility.name,
+          riskScore: scoringResult.aggregateScore,
+          riskInterpretation: scoringResult.interpretation,
         },
       },
       ipAddress,
