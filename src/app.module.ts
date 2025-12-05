@@ -17,6 +17,7 @@ import { FaqTopicModule } from './faq-topics/faq-topic.module';
 import { HealthFacilityModule } from './health-facilities/health-facility.module';
 import { HealthFacilityTypeModule } from './health-facility-types/health-facility-type.module';
 import { ReferralModule } from './referrals/referral.module';
+import { ActivitiesModule } from './activities/activities.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ReferralModule } from './referrals/referral.module';
     HealthFacilityModule,
     HealthFacilityTypeModule,
     ReferralModule,
+    ActivitiesModule,
   ],
   controllers: [AppController],
   providers: [
