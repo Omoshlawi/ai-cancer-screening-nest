@@ -121,6 +121,19 @@ export class ClientsService {
       orderBy: {
         createdAt: 'desc',
       },
+      include: {
+        screenings: {
+          select: {
+            id: true,
+            createdAt: true,
+            scoringResult: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+        },
+      },
       ...this.paginationService.buildPaginationQuery(findClientDto),
     };
     const [data, totalCount] = await Promise.all([
@@ -140,6 +153,19 @@ export class ClientsService {
   async findOne(id: string) {
     const client = await this.prismaService.client.findUnique({
       where: { id },
+      include: {
+        screenings: {
+          select: {
+            id: true,
+            createdAt: true,
+            scoringResult: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+        },
+      },
     });
     if (!client) {
       throw new NotFoundException('Client not found');
