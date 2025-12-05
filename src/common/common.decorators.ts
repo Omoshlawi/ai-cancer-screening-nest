@@ -68,3 +68,22 @@ export const OriginalUrl = createParamDecorator(
     return request.originalUrl;
   },
 );
+
+export const IpAddress = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request: Request = ctx.switchToHttp().getRequest();
+    return (
+      (request.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+      (request.headers['x-real-ip'] as string) ||
+      request.socket.remoteAddress ||
+      undefined
+    );
+  },
+);
+
+export const UserAgent = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request: Request = ctx.switchToHttp().getRequest();
+    return request.headers['user-agent'] || undefined;
+  },
+);

@@ -12,7 +12,12 @@ import { ClientsService } from './clients.service';
 import { CreateClientDto, FindClientDto, UpdateClientDto } from './client.dto';
 import { Session } from '@thallesp/nestjs-better-auth';
 import { UserSession } from '../auth/auth.types';
-import { ApiErrorsResponse, OriginalUrl } from '../common/common.decorators';
+import {
+  ApiErrorsResponse,
+  OriginalUrl,
+  IpAddress,
+  UserAgent,
+} from '../common/common.decorators';
 import { ApiOperation } from '@nestjs/swagger';
 import { RequireChp } from '../chps/chp.decorators';
 
@@ -27,8 +32,15 @@ export class ClientsController {
   create(
     @Body() createClientDto: CreateClientDto,
     @Session() session: UserSession,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
   ) {
-    return this.clientsService.create(createClientDto, session.user);
+    return this.clientsService.create(
+      createClientDto,
+      session.user,
+      ipAddress,
+      userAgent,
+    );
   }
 
   @Get()
@@ -51,14 +63,31 @@ export class ClientsController {
   @Put(':id')
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Update a client by ID' })
-  update(@Param('id') id: string, @Body() updateClientDto: UpdateClientDto) {
-    return this.clientsService.update(id, updateClientDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateClientDto: UpdateClientDto,
+    @Session() session: UserSession,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
+  ) {
+    return this.clientsService.update(
+      id,
+      updateClientDto,
+      session.user,
+      ipAddress,
+      userAgent,
+    );
   }
 
   @Delete(':id')
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Delete a client by ID' })
-  delete(@Param('id') id: string) {
-    return this.clientsService.delete(id);
+  delete(
+    @Param('id') id: string,
+    @Session() session: UserSession,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
+  ) {
+    return this.clientsService.delete(id, session.user, ipAddress, userAgent);
   }
 }

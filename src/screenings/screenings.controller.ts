@@ -16,7 +16,12 @@ import {
   ScreeningDto,
 } from './screenings.dto';
 import { UserSession } from '../auth/auth.types';
-import { ApiErrorsResponse, OriginalUrl } from '../common/common.decorators';
+import {
+  ApiErrorsResponse,
+  OriginalUrl,
+  IpAddress,
+  UserAgent,
+} from '../common/common.decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
 @Controller('screenings')
@@ -49,8 +54,15 @@ export class ScreeningsController {
   create(
     @Body() screenClientDto: ScreenClientDto,
     @Session() session: UserSession,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
   ) {
-    return this.screeningsService.create(screenClientDto, session.user);
+    return this.screeningsService.create(
+      screenClientDto,
+      session.user,
+      ipAddress,
+      userAgent,
+    );
   }
 
   @Get(':id')
@@ -58,7 +70,17 @@ export class ScreeningsController {
   @ApiOperation({ summary: 'Get a screening by ID' })
   @ApiOkResponse({ type: ScreeningDto })
   @ApiErrorsResponse()
-  findOne(@Param('id') id: string) {
-    return this.screeningsService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @Session() session: UserSession,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
+  ) {
+    return this.screeningsService.findOne(
+      id,
+      session.user,
+      ipAddress,
+      userAgent,
+    );
   }
 }

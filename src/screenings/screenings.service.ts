@@ -11,6 +11,7 @@ import {
   StringBoolean,
 } from './screenings.dto';
 import { ScoringService } from './scoring.sevice';
+import { ActivitiesService } from '../activities/activities.service';
 
 @Injectable()
 export class ScreeningsService {
@@ -18,6 +19,7 @@ export class ScreeningsService {
     private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
     private readonly scoringService: ScoringService,
+    private readonly activitiesService: ActivitiesService,
   ) {}
 
   async findAll(
@@ -68,7 +70,12 @@ export class ScreeningsService {
     };
   }
 
-  async create(screenClientDto: ScreenClientDto, user: UserSession['user']) {
+  async create(
+    screenClientDto: ScreenClientDto,
+    user: UserSession['user'],
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const chp = await this.prismaService.communityHealthProvider.findUnique({
       where: { userId: user.id },
     });
@@ -79,7 +86,7 @@ export class ScreeningsService {
       screenClientDto.clientId,
       screenClientDto,
     );
-    return await this.prismaService.screening.create({
+    const screening = await this.prismaService.screening.create({
       data: {
         ...screenClientDto,
         providerId: chp.id,
@@ -94,9 +101,33 @@ export class ScreeningsService {
         provider: true,
       },
     });
+
+    // Track activity
+    await this.activitiesService.trackActivity(
+      user.id,
+      {
+        action: 'create',
+        resource: 'screening',
+        resourceId: screening.id,
+        metadata: {
+          clientId: screening.clientId,
+          clientName: `${screening.client.firstName} ${screening.client.lastName}`,
+          screeningId: screening.id,
+        },
+      },
+      ipAddress,
+      userAgent,
+    );
+
+    return screening;
   }
 
-  async findOne(id: string) {
+  async findOne(
+    id: string,
+    user?: UserSession['user'],
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const screening = await this.prismaService.screening.findUnique({
       where: { id },
       include: {
@@ -107,6 +138,26 @@ export class ScreeningsService {
     if (!screening) {
       throw new NotFoundException('Screening not found');
     }
+
+    // Track activity if user is provided
+    if (user) {
+      await this.activitiesService.trackActivity(
+        user.id,
+        {
+          action: 'view',
+          resource: 'screening',
+          resourceId: screening.id,
+          metadata: {
+            clientId: screening.clientId,
+            clientName: `${screening.client.firstName} ${screening.client.lastName}`,
+            screeningId: screening.id,
+          },
+        },
+        ipAddress,
+        userAgent,
+      );
+    }
+
     return screening;
   }
 }

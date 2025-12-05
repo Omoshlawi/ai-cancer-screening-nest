@@ -20,7 +20,12 @@ import {
 } from './referral.dto';
 import { Session } from '@thallesp/nestjs-better-auth';
 import { UserSession } from '../auth/auth.types';
-import { ApiErrorsResponse, OriginalUrl } from '../common/common.decorators';
+import {
+  ApiErrorsResponse,
+  OriginalUrl,
+  IpAddress,
+  UserAgent,
+} from '../common/common.decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { RequireChp } from '../chps/chp.decorators';
 
@@ -36,8 +41,15 @@ export class ReferralController {
   create(
     @Body() createReferralDto: CreateReferralDto,
     @Session() session: UserSession,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
   ) {
-    return this.referralService.create(createReferralDto, session.user);
+    return this.referralService.create(
+      createReferralDto,
+      session.user,
+      ipAddress,
+      userAgent,
+    );
   }
 
   @Get()
@@ -72,32 +84,59 @@ export class ReferralController {
     @Param('id') id: string,
     @Body() updateReferralDto: UpdateReferralDto,
     @Session() session: UserSession,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
   ) {
-    return this.referralService.update(id, updateReferralDto, session.user);
+    return this.referralService.update(
+      id,
+      updateReferralDto,
+      session.user,
+      ipAddress,
+      userAgent,
+    );
   }
 
   @Delete(':id')
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Delete a referral by ID' })
-  delete(@Param('id') id: string, @Session() session: UserSession) {
-    return this.referralService.delete(id, session.user);
+  delete(
+    @Param('id') id: string,
+    @Session() session: UserSession,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
+  ) {
+    return this.referralService.delete(id, session.user, ipAddress, userAgent);
   }
 
   @Patch(':id/complete')
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Mark a referral as completed' })
-  complete(@Param('id') id: string, @Session() session: UserSession) {
-    return this.referralService.complete(id, session.user);
+  complete(
+    @Param('id') id: string,
+    @Session() session: UserSession,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
+  ) {
+    return this.referralService.complete(
+      id,
+      session.user,
+      ipAddress,
+      userAgent,
+    );
   }
 
   @Patch(':id/cancel')
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Cancel a referral' })
-  cancel(@Param('id') id: string, @Session() session: UserSession) {
-    return this.referralService.cancel(id, session.user);
+  cancel(
+    @Param('id') id: string,
+    @Session() session: UserSession,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
+  ) {
+    return this.referralService.cancel(id, session.user, ipAddress, userAgent);
   }
 }
-

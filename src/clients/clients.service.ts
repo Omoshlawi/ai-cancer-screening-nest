@@ -6,6 +6,7 @@ import { FunctionFirstArgument } from '../common/common.types';
 import { PaginationService } from '../common/pagination.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClientDto, FindClientDto, UpdateClientDto } from './client.dto';
+import { ActivitiesService } from '../activities/activities.service';
 
 @Injectable()
 export class ClientsService {
@@ -13,13 +14,19 @@ export class ClientsService {
     private readonly prismaService: PrismaService,
     private readonly authService: AuthService<BetterAuthWithPlugins>,
     private readonly paginationService: PaginationService,
+    private readonly activitiesService: ActivitiesService,
   ) {}
 
-  async create(createClientDto: CreateClientDto, user: UserSession['user']) {
+  async create(
+    createClientDto: CreateClientDto,
+    user: UserSession['user'],
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const chp = await this.prismaService.communityHealthProvider.findUnique({
       where: { userId: user.id },
     });
-    return this.prismaService.client.create({
+    const client = await this.prismaService.client.create({
       data: {
         firstName: createClientDto.firstName,
         lastName: createClientDto.lastName,
@@ -31,6 +38,24 @@ export class ClientsService {
         createdById: chp!.id,
       },
     });
+
+    // Track activity
+    await this.activitiesService.trackActivity(
+      user.id,
+      {
+        action: 'create',
+        resource: 'client',
+        resourceId: client.id,
+        metadata: {
+          clientName: `${client.firstName} ${client.lastName}`,
+          clientId: client.id,
+        },
+      },
+      ipAddress,
+      userAgent,
+    );
+
+    return client;
   }
 
   async findAll(findClientDto: FindClientDto, originalUrl: string) {
@@ -122,18 +147,70 @@ export class ClientsService {
     return client;
   }
 
-  async update(id: string, updateClientDto: UpdateClientDto) {
+  async update(
+    id: string,
+    updateClientDto: UpdateClientDto,
+    user?: UserSession['user'],
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const client = await this.findOne(id);
-    return await this.prismaService.client.update({
+    const updatedClient = await this.prismaService.client.update({
       where: { id: client.id },
       data: updateClientDto,
     });
+
+    // Track activity if user is provided
+    if (user) {
+      await this.activitiesService.trackActivity(
+        user.id,
+        {
+          action: 'update',
+          resource: 'client',
+          resourceId: updatedClient.id,
+          metadata: {
+            clientName: `${updatedClient.firstName} ${updatedClient.lastName}`,
+            clientId: updatedClient.id,
+          },
+        },
+        ipAddress,
+        userAgent,
+      );
+    }
+
+    return updatedClient;
   }
 
-  async delete(id: string) {
+  async delete(
+    id: string,
+    user?: UserSession['user'],
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const client = await this.findOne(id);
-    return await this.prismaService.client.delete({
+    const clientName = `${client.firstName} ${client.lastName}`;
+    await this.prismaService.client.delete({
       where: { id: client.id },
     });
+
+    // Track activity if user is provided
+    if (user) {
+      await this.activitiesService.trackActivity(
+        user.id,
+        {
+          action: 'delete',
+          resource: 'client',
+          resourceId: id,
+          metadata: {
+            clientName,
+            clientId: id,
+          },
+        },
+        ipAddress,
+        userAgent,
+      );
+    }
+
+    return { id, deleted: true };
   }
 }

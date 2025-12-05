@@ -15,17 +15,21 @@ import {
   ReferralStatus,
   UpdateReferralDto,
 } from './referral.dto';
+import { ActivitiesService } from '../activities/activities.service';
 
 @Injectable()
 export class ReferralService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
+    private readonly activitiesService: ActivitiesService,
   ) {}
 
   async create(
     createReferralDto: CreateReferralDto,
     user: UserSession['user'],
+    ipAddress?: string,
+    userAgent?: string,
   ) {
     // Get the CHP for the current user
     const chp = await this.prismaService.communityHealthProvider.findUnique({
@@ -39,6 +43,9 @@ export class ReferralService {
     // Verify the screening belongs to this CHP
     const screening = await this.prismaService.screening.findUnique({
       where: { id: createReferralDto.screeningId },
+      include: {
+        client: true,
+      },
     });
 
     if (!screening) {
@@ -60,7 +67,7 @@ export class ReferralService {
       throw new NotFoundException('Health facility not found');
     }
 
-    return this.prismaService.referral.create({
+    const referral = await this.prismaService.referral.create({
       data: {
         screeningId: createReferralDto.screeningId,
         appointmentTime: new Date(createReferralDto.appointmentTime),
@@ -69,10 +76,35 @@ export class ReferralService {
         status: ReferralStatus.PENDING,
       },
       include: {
-        screening: true,
+        screening: {
+          include: {
+            client: true,
+          },
+        },
         healthFacility: true,
       },
     });
+
+    // Track activity
+    await this.activitiesService.trackActivity(
+      user.id,
+      {
+        action: 'create',
+        resource: 'referral',
+        resourceId: referral.id,
+        metadata: {
+          screeningId: referral.screeningId,
+          clientId: screening.clientId,
+          clientName: `${screening.client.firstName} ${screening.client.lastName}`,
+          healthFacilityId: referral.healthFacilityId,
+          healthFacilityName: healthFacility.name,
+        },
+      },
+      ipAddress,
+      userAgent,
+    );
+
+    return referral;
   }
 
   async findAll(
@@ -173,6 +205,8 @@ export class ReferralService {
     id: string,
     updateReferralDto: UpdateReferralDto,
     user: UserSession['user'],
+    ipAddress?: string,
+    userAgent?: string,
   ) {
     const referral = await this.findOne(id, user);
 
@@ -205,7 +239,7 @@ export class ReferralService {
       updateData.healthFacilityId = updateReferralDto.healthFacilityId;
     }
 
-    return await this.prismaService.referral.update({
+    const updatedReferral = await this.prismaService.referral.update({
       where: { id: referral.id },
       data: updateData,
       include: {
@@ -218,9 +252,35 @@ export class ReferralService {
         healthFacility: true,
       },
     });
+
+    // Track activity
+    await this.activitiesService.trackActivity(
+      user.id,
+      {
+        action: 'update',
+        resource: 'referral',
+        resourceId: updatedReferral.id,
+        metadata: {
+          screeningId: updatedReferral.screeningId,
+          clientId: updatedReferral.screening.clientId,
+          clientName: `${updatedReferral.screening.client.firstName} ${updatedReferral.screening.client.lastName}`,
+          healthFacilityId: updatedReferral.healthFacilityId,
+          healthFacilityName: updatedReferral.healthFacility.name,
+        },
+      },
+      ipAddress,
+      userAgent,
+    );
+
+    return updatedReferral;
   }
 
-  async complete(id: string, user: UserSession['user']) {
+  async complete(
+    id: string,
+    user: UserSession['user'],
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const referral = await this.findOne(id, user);
 
     if (referral.status === ReferralStatus.COMPLETED) {
@@ -231,19 +291,49 @@ export class ReferralService {
       throw new NotFoundException('Cannot complete a cancelled referral');
     }
 
-    return await this.prismaService.referral.update({
+    const completedReferral = await this.prismaService.referral.update({
       where: { id: referral.id },
       data: {
         status: ReferralStatus.COMPLETED,
       },
       include: {
-        screening: true,
+        screening: {
+          include: {
+            client: true,
+          },
+        },
         healthFacility: true,
       },
     });
+
+    // Track activity
+    await this.activitiesService.trackActivity(
+      user.id,
+      {
+        action: 'complete',
+        resource: 'referral',
+        resourceId: completedReferral.id,
+        metadata: {
+          screeningId: completedReferral.screeningId,
+          clientId: completedReferral.screening.clientId,
+          clientName: `${completedReferral.screening.client.firstName} ${completedReferral.screening.client.lastName}`,
+          healthFacilityId: completedReferral.healthFacilityId,
+          healthFacilityName: completedReferral.healthFacility.name,
+        },
+      },
+      ipAddress,
+      userAgent,
+    );
+
+    return completedReferral;
   }
 
-  async cancel(id: string, user: UserSession['user']) {
+  async cancel(
+    id: string,
+    user: UserSession['user'],
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const referral = await this.findOne(id, user);
 
     if (referral.status === ReferralStatus.CANCELLED) {
@@ -254,22 +344,76 @@ export class ReferralService {
       throw new NotFoundException('Cannot cancel a completed referral');
     }
 
-    return await this.prismaService.referral.update({
+    const cancelledReferral = await this.prismaService.referral.update({
       where: { id: referral.id },
       data: {
         status: ReferralStatus.CANCELLED,
       },
       include: {
-        screening: true,
+        screening: {
+          include: {
+            client: true,
+          },
+        },
         healthFacility: true,
       },
     });
+
+    // Track activity
+    await this.activitiesService.trackActivity(
+      user.id,
+      {
+        action: 'cancel',
+        resource: 'referral',
+        resourceId: cancelledReferral.id,
+        metadata: {
+          screeningId: cancelledReferral.screeningId,
+          clientId: cancelledReferral.screening.clientId,
+          clientName: `${cancelledReferral.screening.client.firstName} ${cancelledReferral.screening.client.lastName}`,
+          healthFacilityId: cancelledReferral.healthFacilityId,
+          healthFacilityName: cancelledReferral.healthFacility.name,
+        },
+      },
+      ipAddress,
+      userAgent,
+    );
+
+    return cancelledReferral;
   }
 
-  async delete(id: string, user: UserSession['user']) {
+  async delete(
+    id: string,
+    user: UserSession['user'],
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const referral = await this.findOne(id, user);
-    return await this.prismaService.referral.delete({
+    const referralData = {
+      id: referral.id,
+      screeningId: referral.screeningId,
+      clientId: referral.screening.clientId,
+      clientName: `${referral.screening.client.firstName} ${referral.screening.client.lastName}`,
+      healthFacilityId: referral.healthFacilityId,
+      healthFacilityName: referral.healthFacility.name,
+    };
+
+    await this.prismaService.referral.delete({
       where: { id: referral.id },
     });
+
+    // Track activity
+    await this.activitiesService.trackActivity(
+      user.id,
+      {
+        action: 'delete',
+        resource: 'referral',
+        resourceId: id,
+        metadata: referralData,
+      },
+      ipAddress,
+      userAgent,
+    );
+
+    return { id, deleted: true };
   }
 }

@@ -1,13 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Query,
-  Session,
-  Req,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Session } from '@nestjs/common';
 import { ActivitiesService } from './activities.service';
 import {
   CreateActivityDto,
@@ -16,9 +8,13 @@ import {
   ActivityDto,
 } from './activities.dto';
 import { UserSession } from '../auth/auth.types';
-import { ApiErrorsResponse, OriginalUrl } from '../common/common.decorators';
+import {
+  ApiErrorsResponse,
+  OriginalUrl,
+  IpAddress,
+  UserAgent,
+} from '../common/common.decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
-import { Request } from 'express';
 
 @Controller('activities')
 export class ActivitiesController {
@@ -31,15 +27,9 @@ export class ActivitiesController {
   async trackActivity(
     @Body() createActivityDto: CreateActivityDto,
     @Session() session: UserSession,
-    @Req() req: Request,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
   ) {
-    const ipAddress =
-      (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
-      (req.headers['x-real-ip'] as string) ||
-      req.socket.remoteAddress ||
-      undefined;
-    const userAgent = req.headers['user-agent'] || undefined;
-
     return this.activitiesService.trackActivity(
       session.user.id,
       createActivityDto,
