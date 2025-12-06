@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { pick } from 'lodash';
+import * as turf from '@turf/turf';
 import { FunctionFirstArgument } from '../common/common.types';
 import { PaginationService } from '../common/pagination.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,6 +14,20 @@ import {
 
 @Injectable()
 export class HealthFacilityService {
+  // Configuration constants for nearest facility search
+  private static readonly NEAREST_FACILITY_CONFIG = {
+    /** Number of nearest facilities to return */
+    TARGET_COUNT: 10,
+    /** Maximum search radius in kilometers (safety limit) */
+    MAX_DISTANCE_KM: 1000,
+    /** Initial search radius in kilometers */
+    INITIAL_DISTANCE_KM: 5,
+    /** Distance increment in kilometers for each iteration */
+    DISTANCE_INCREMENT_KM: 5,
+    /** Multiplier for fetching facilities (to account for distance filtering) */
+    FETCH_MULTIPLIER: 3,
+  } as const;
+
   constructor(
     private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
@@ -138,70 +153,159 @@ export class HealthFacilityService {
     });
   }
 
+  /**
+   * Calculate bounding box (min/max lat/lng) for a given center point and distance in kilometers
+   * Uses TurfJS to create a circle and extract its bounding box
+   */
+  private calculateBoundingBox(
+    centerLat: number,
+    centerLng: number,
+    distanceKm: number,
+  ): { minLat: number; maxLat: number; minLng: number; maxLng: number } {
+    const center = turf.point([centerLng, centerLat]);
+    const circle = turf.circle(center, distanceKm, { units: 'kilometers' });
+    const bbox = turf.bbox(circle);
+
+    // bbox format: [minLng, minLat, maxLng, maxLat]
+    return {
+      minLng: bbox[0],
+      minLat: bbox[1],
+      maxLng: bbox[2],
+      maxLat: bbox[3],
+    };
+  }
+
   async findNearest(
     findNearestHealthFacilityDto: FindNearestHealthFacilityDto,
   ) {
     const { lat, lng } = findNearestHealthFacilityDto;
+    const {
+      TARGET_COUNT: targetCount,
+      MAX_DISTANCE_KM: maxDistanceKm,
+      INITIAL_DISTANCE_KM: initialDistanceKm,
+      DISTANCE_INCREMENT_KM: distanceIncrementKm,
+      FETCH_MULTIPLIER: fetchMultiplier,
+    } = HealthFacilityService.NEAREST_FACILITY_CONFIG;
 
-    // Use raw SQL query with Haversine formula for efficient distance calculation
-    // This is much more efficient than loading all facilities and calculating in application code
-    const result = await this.prismaService.$queryRaw<
-      Array<{
-        id: string;
-        name: string;
-        address: string;
-        phoneNumber: string;
-        email: string;
-        logo: string;
-        coordinates: { latitude: number; longitude: number };
-        typeId: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        distanceKm: number;
-      }>
-    >`
-      SELECT 
-        hf.*,
-        (
-          6371 * acos(
-            cos(radians(${lat})) *
-            cos(radians((hf.coordinates->>'latitude')::float)) *
-            cos(radians((hf.coordinates->>'longitude')::float) - radians(${lng})) +
-            sin(radians(${lat})) *
-            sin(radians((hf.coordinates->>'latitude')::float))
-          )
-        ) AS "distanceKm"
-      FROM "HealthFacility" hf
-      WHERE hf.coordinates IS NOT NULL
-        AND hf.coordinates->>'latitude' IS NOT NULL
-        AND hf.coordinates->>'longitude' IS NOT NULL
-      ORDER BY "distanceKm" ASC
-      LIMIT 1
-    `;
+    const centerPoint = turf.point([lng, lat]);
+    let currentDistanceKm = initialDistanceKm;
+    let facilitiesWithDistance: Array<{
+      facility: any;
+      distanceKm: number;
+    }> = [];
 
-    if (!result || result.length === 0) {
-      throw new NotFoundException('No health facility found');
-    }
+    // Iteratively increase search radius until we find 10 facilities
+    while (
+      facilitiesWithDistance.length < targetCount &&
+      currentDistanceKm <= maxDistanceKm
+    ) {
+      const bbox = this.calculateBoundingBox(lat, lng, currentDistanceKm);
 
-    const nearestFacility = result[0];
-
-    // Fetch related data (type and referrals) using Prisma
-    const facilityWithRelations =
-      await this.prismaService.healthFacility.findUnique({
-        where: { id: nearestFacility.id },
+      // Use Prisma to filter facilities within bounding box
+      // Prisma JSON path queries for filtering by latitude/longitude
+      const facilities = await this.prismaService.healthFacility.findMany({
+        where: {
+          AND: [
+            {
+              coordinates: {
+                path: ['latitude'],
+                gte: bbox.minLat,
+              },
+            },
+            {
+              coordinates: {
+                path: ['latitude'],
+                lte: bbox.maxLat,
+              },
+            },
+            {
+              coordinates: {
+                path: ['longitude'],
+                gte: bbox.minLng,
+              },
+            },
+            {
+              coordinates: {
+                path: ['longitude'],
+                lte: bbox.maxLng,
+              },
+            },
+          ],
+        },
         include: {
           referrals: true,
           type: true,
         },
+        // Fetch more than needed to account for distance filtering
+        take: targetCount * fetchMultiplier,
       });
 
-    if (!facilityWithRelations) {
-      throw new NotFoundException('Health facility not found');
+      // Calculate distances using TurfJS and add to results
+      const facilitiesInRadius = facilities
+        .map((facility) => {
+          const coords = facility.coordinates as {
+            latitude: number;
+            longitude: number;
+          };
+          if (!coords?.latitude || !coords?.longitude) {
+            return null;
+          }
+
+          const facilityPoint = turf.point([coords.longitude, coords.latitude]);
+          const distanceKm = turf.distance(centerPoint, facilityPoint, {
+            units: 'kilometers',
+          });
+
+          return {
+            facility,
+            distanceKm,
+          };
+        })
+        .filter(
+          (
+            f,
+          ): f is {
+            facility: (typeof facilities)[0];
+            distanceKm: number;
+          } => f !== null,
+        );
+
+      // Filter to only include facilities within the current radius
+      const facilitiesWithinRadius = facilitiesInRadius.filter(
+        (f) => f.distanceKm <= currentDistanceKm,
+      );
+
+      // Sort by distance and add to our results
+      facilitiesWithinRadius.sort((a, b) => a.distanceKm - b.distanceKm);
+      facilitiesWithDistance = facilitiesWithinRadius.slice(0, targetCount);
+
+      // If we found enough facilities, break the loop
+      if (facilitiesWithDistance.length >= targetCount) {
+        break;
+      }
+
+      // Increase search radius for next iteration
+      currentDistanceKm += distanceIncrementKm;
     }
 
-    return {
-      ...facilityWithRelations,
-      distanceKm: Number(nearestFacility.distanceKm.toFixed(2)),
-    };
+    if (!facilitiesWithDistance || facilitiesWithDistance.length === 0) {
+      throw new NotFoundException('No health facilities found');
+    }
+
+    // Take only the first 10 facilities (sorted by distance)
+    const nearestFacilities = facilitiesWithDistance.slice(0, targetCount);
+
+    // Format results with distance
+    const result = nearestFacilities.map((item) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return {
+        ...item.facility,
+        distanceKm: Number(item.distanceKm.toFixed(2)),
+      };
+    });
+
+    // Return array of 10 nearest facilities (or fewer if not enough exist)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return result;
   }
 }

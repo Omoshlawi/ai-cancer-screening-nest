@@ -55,10 +55,10 @@ export class HealthFacilityController {
   }
 
   @Get('nearest')
-  @ApiOkResponse({ type: NearestHealthFacilityResponseDto })
+  @ApiOkResponse({ type: [NearestHealthFacilityResponseDto] })
   @ApiErrorsResponse()
   @ApiOperation({
-    summary: 'Find the nearest health facility to given coordinates',
+    summary: 'Find the 10 nearest health facilities to given coordinates',
   })
   @OptionalAuth()
   findNearest(
