@@ -18,8 +18,9 @@ import {
 
 @Injectable()
 export class HealthFacilityService {
-  // Configuration constants for nearest facility search
-  private static readonly NEAREST_FACILITY_CONFIG = {
+  // Default configuration constants for nearest facility search
+  // These are used as fallbacks when query parameters are not provided
+  private static readonly DEFAULT_NEAREST_FACILITY_CONFIG = {
     /** Number of nearest facilities to return */
     TARGET_COUNT: 10,
     /** Maximum search radius in kilometers (safety limit) */
@@ -188,14 +189,32 @@ export class HealthFacilityService {
   async findNearest(
     findNearestHealthFacilityDto: FindNearestHealthFacilityDto,
   ) {
-    const { lat, lng } = findNearestHealthFacilityDto;
     const {
-      TARGET_COUNT: targetCount,
-      MAX_DISTANCE_KM: maxDistanceKm,
-      INITIAL_DISTANCE_KM: initialDistanceKm,
-      DISTANCE_INCREMENT_KM: distanceIncrementKm,
-      FETCH_MULTIPLIER: fetchMultiplier,
-    } = HealthFacilityService.NEAREST_FACILITY_CONFIG;
+      lat,
+      lng,
+      targetCount: targetCountParam,
+      maxDistanceKm: maxDistanceKmParam,
+      initialDistanceKm: initialDistanceKmParam,
+      distanceIncrementKm: distanceIncrementKmParam,
+      fetchMultiplier: fetchMultiplierParam,
+    } = findNearestHealthFacilityDto;
+
+    // Use query parameters if provided, otherwise use defaults
+    const {
+      TARGET_COUNT: defaultTargetCount,
+      MAX_DISTANCE_KM: defaultMaxDistanceKm,
+      INITIAL_DISTANCE_KM: defaultInitialDistanceKm,
+      DISTANCE_INCREMENT_KM: defaultDistanceIncrementKm,
+      FETCH_MULTIPLIER: defaultFetchMultiplier,
+    } = HealthFacilityService.DEFAULT_NEAREST_FACILITY_CONFIG;
+
+    const targetCount = targetCountParam ?? defaultTargetCount;
+    const maxDistanceKm = maxDistanceKmParam ?? defaultMaxDistanceKm;
+    const initialDistanceKm =
+      initialDistanceKmParam ?? defaultInitialDistanceKm;
+    const distanceIncrementKm =
+      distanceIncrementKmParam ?? defaultDistanceIncrementKm;
+    const fetchMultiplier = fetchMultiplierParam ?? defaultFetchMultiplier;
 
     const centerPoint = turf.point([lng, lat]);
     let currentDistanceKm = initialDistanceKm;
@@ -204,7 +223,11 @@ export class HealthFacilityService {
       distanceKm: number;
     }> = [];
 
-    // Iteratively increase search radius until we find 10 facilities
+    // Iteratively increase search radius until we find targetCount facilities
+    // This approach is efficient for large datasets because:
+    // 1. Bounding box filtering reduces the search space before distance calculation
+    // 2. We only fetch a limited number of candidates per iteration
+    // 3. The search stops as soon as enough facilities are found
     while (
       facilitiesWithDistance.length < targetCount &&
       currentDistanceKm <= maxDistanceKm
@@ -213,6 +236,7 @@ export class HealthFacilityService {
 
       // Use Prisma to filter facilities within bounding box
       // Prisma JSON path queries for filtering by latitude/longitude
+      // This bounding box filter significantly reduces the dataset before distance calculation
       const facilities = await this.prismaService.healthFacility.findMany({
         where: {
           AND: [
@@ -239,6 +263,9 @@ export class HealthFacilityService {
                 path: ['longitude'],
                 lte: bbox.maxLng,
               },
+            },
+            {
+              typeId: findNearestHealthFacilityDto.typeId ?? undefined,
             },
           ],
         },
@@ -279,17 +306,40 @@ export class HealthFacilityService {
           } => f !== null,
         );
 
-      // Filter to only include facilities within the current radius
+      // Filter to only include facilities within the current radius AND maxDistanceKm
+      // This ensures maxDistanceKm is always respected, even if currentDistanceKm exceeds it
       const facilitiesWithinRadius = facilitiesInRadius.filter(
-        (f) => f.distanceKm <= currentDistanceKm,
+        (f) =>
+          f.distanceKm <= currentDistanceKm && f.distanceKm <= maxDistanceKm,
       );
 
-      // Sort by distance and add to our results
+      // Sort by distance
       facilitiesWithinRadius.sort((a, b) => a.distanceKm - b.distanceKm);
-      facilitiesWithDistance = facilitiesWithinRadius.slice(0, targetCount);
 
-      // If we found enough facilities, break the loop
+      // Add new facilities to existing results, avoiding duplicates
+      const existingIds = new Set(
+        facilitiesWithDistance.map((f) => f.facility.id),
+      );
+      const newFacilities = facilitiesWithinRadius.filter(
+        (f) => !existingIds.has(f.facility.id),
+      );
+
+      // Combine with existing results and sort again
+      facilitiesWithDistance = [
+        ...facilitiesWithDistance,
+        ...newFacilities,
+      ].sort((a, b) => a.distanceKm - b.distanceKm);
+
+      // Take only the targetCount nearest facilities
+      facilitiesWithDistance = facilitiesWithDistance.slice(0, targetCount);
+
+      // If we found enough facilities within maxDistanceKm, break the loop
       if (facilitiesWithDistance.length >= targetCount) {
+        break;
+      }
+
+      // If currentDistanceKm exceeds maxDistanceKm, stop searching
+      if (currentDistanceKm >= maxDistanceKm) {
         break;
       }
 
@@ -301,18 +351,27 @@ export class HealthFacilityService {
       throw new NotFoundException('No health facilities found');
     }
 
-    // Take only the first 10 facilities (sorted by distance)
-    const nearestFacilities = facilitiesWithDistance.slice(0, targetCount);
+    // Final filter: ensure all results are within maxDistanceKm and limit to targetCount
+    // This is a safety check to ensure maxDistanceKm is always respected
+    const filteredResults = facilitiesWithDistance
+      .filter((item) => item.distanceKm <= maxDistanceKm)
+      .slice(0, targetCount);
+
+    if (filteredResults.length === 0) {
+      throw new NotFoundException(
+        `No health facilities found within ${maxDistanceKm}km`,
+      );
+    }
 
     // Format results with distance
-    const results = nearestFacilities.map((item) => {
+    const results = filteredResults.map((item) => {
       return {
         ...item.facility,
         distanceKm: Number(item.distanceKm.toFixed(2)),
       };
     });
 
-    // Return array of 10 nearest facilities (or fewer if not enough exist)
+    // Return array of targetCount nearest facilities (or fewer if not enough exist within maxDistanceKm)
     return { results };
   }
 }

@@ -8,6 +8,8 @@ import {
   IsNumber,
   IsLatitude,
   IsLongitude,
+  Min,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PHONE_NUMBER_REGEX } from '../common/common.contants';
@@ -220,6 +222,91 @@ export class FindNearestHealthFacilityDto {
   @IsNumber()
   @IsLongitude()
   lng: number;
+
+  @ApiProperty({
+    description: 'Number of nearest facilities to return',
+    example: 10,
+    default: 10,
+    minimum: 1,
+    maximum: 50,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(50)
+  targetCount?: number;
+
+  @ApiProperty({
+    description: 'Maximum search radius in kilometers (safety limit)',
+    example: 1000,
+    default: 1000,
+    minimum: 1,
+    maximum: 5000,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(5000)
+  maxDistanceKm?: number;
+
+  @ApiProperty({
+    description: 'Initial search radius in kilometers',
+    example: 5,
+    default: 5,
+    minimum: 0.1,
+    maximum: 100,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.1)
+  @Max(100)
+  initialDistanceKm?: number;
+
+  @ApiProperty({
+    description: 'Distance increment in kilometers for each iteration',
+    example: 5,
+    default: 5,
+    minimum: 0.1,
+    maximum: 50,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.1)
+  @Max(50)
+  distanceIncrementKm?: number;
+
+  @ApiProperty({
+    description:
+      'Multiplier for fetching facilities (to account for distance filtering). Higher values fetch more candidates but may be slower.',
+    example: 3,
+    default: 3,
+    minimum: 1,
+    maximum: 10,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(10)
+  fetchMultiplier?: number;
+
+  @ApiProperty({
+    description: 'Filter facilities by health facility type ID',
+    example: 'clx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  typeId?: string;
 }
 
 export class ReferralItemResponseDto {

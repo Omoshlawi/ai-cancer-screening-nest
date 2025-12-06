@@ -58,9 +58,12 @@ export class HealthFacilityController {
   @ApiOkResponse({ type: FindNearestHealthFacilityResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({
-    summary: 'Find the 10 nearest health facilities to given coordinates',
+    summary: 'Find the nearest health facilities to given coordinates',
     description:
-      'Returns up to 10 nearest health facilities sorted by distance from the provided coordinates. The search uses an iterative approach, starting with a small radius and expanding until 10 facilities are found.',
+      'Returns the nearest health facilities sorted by distance from the provided coordinates. ' +
+      'The search uses an efficient iterative approach with bounding box filtering, starting with a small radius and expanding until the target count is found. ' +
+      'All configuration parameters are optional and have sensible defaults optimized for large datasets. ' +
+      'For best performance with large datasets, use smaller initialDistanceKm and distanceIncrementKm values, and adjust fetchMultiplier based on facility density.',
   })
   @OptionalAuth()
   findNearest(
