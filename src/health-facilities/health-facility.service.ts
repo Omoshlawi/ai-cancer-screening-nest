@@ -305,8 +305,7 @@ export class HealthFacilityService {
     const nearestFacilities = facilitiesWithDistance.slice(0, targetCount);
 
     // Format results with distance
-    const result = nearestFacilities.map((item) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    const results = nearestFacilities.map((item) => {
       return {
         ...item.facility,
         distanceKm: Number(item.distanceKm.toFixed(2)),
@@ -314,6 +313,6 @@ export class HealthFacilityService {
     });
 
     // Return array of 10 nearest facilities (or fewer if not enough exist)
-    return result;
+    return { results };
   }
 }

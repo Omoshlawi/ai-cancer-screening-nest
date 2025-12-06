@@ -373,6 +373,38 @@ export class NearestHealthFacilityResponseDto extends HealthFacilityResponseDto 
   distanceKm: number;
 }
 
+export class FindNearestHealthFacilityResponseDto {
+  @ApiProperty({
+    description:
+      'The list of nearest health facilities sorted by distance (nearest to furthest)',
+    type: [NearestHealthFacilityResponseDto],
+    example: [
+      {
+        id: 'clx1234567890',
+        name: 'Kenyatta National Hospital',
+        address: 'Hospital Road, Nairobi, Kenya',
+        phoneNumber: '+254712345678',
+        email: 'info@knh.ac.ke',
+        logo: 'https://example.com/logo.png',
+        coordinates: {
+          latitude: -1.2921,
+          longitude: 36.8219,
+        },
+        typeId: 'clx9876543210',
+        type: {
+          id: 'clx9876543210',
+          name: 'Hospital',
+          description: 'A large medical facility',
+        },
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+        distanceKm: 2.5,
+      },
+    ],
+  })
+  results: NearestHealthFacilityResponseDto[];
+}
+
 export class FindHealthFacilityResponseDto extends PaginationControlsDto {
   @ApiProperty({
     description: 'The list of health facilities',
