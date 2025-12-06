@@ -141,12 +141,7 @@ export class ScreeningsService {
     return screening;
   }
 
-  async findOne(
-    id: string,
-    user?: UserSession['user'],
-    ipAddress?: string,
-    userAgent?: string,
-  ) {
+  async findOne(id: string) {
     const screening = await this.prismaService.screening.findUnique({
       where: { id },
       include: {
@@ -156,25 +151,6 @@ export class ScreeningsService {
     });
     if (!screening) {
       throw new NotFoundException('Screening not found');
-    }
-
-    // Track activity if user is provided
-    if (user) {
-      await this.activitiesService.trackActivity(
-        user.id,
-        {
-          action: 'view',
-          resource: 'screening',
-          resourceId: screening.id,
-          metadata: {
-            clientId: screening.clientId,
-            clientName: `${screening.client.firstName} ${screening.client.lastName}`,
-            screeningId: screening.id,
-          },
-        },
-        ipAddress,
-        userAgent,
-      );
     }
 
     return screening;

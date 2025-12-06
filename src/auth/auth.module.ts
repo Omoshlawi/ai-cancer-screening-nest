@@ -95,7 +95,15 @@ export class AuthModule {
               bearer(),
               openAPI(),
               jwt(),
-              twoFactor(),
+              twoFactor({
+                otpOptions: {
+                  sendOTP({ user, otp }, request) {
+                    // console.log('Data ---------', user);
+                    console.log('OTP ---------', otp);
+                    // console.log('Request ---------', request);
+                  },
+                },
+              }),
             ],
             advanced: { disableOriginCheck: true },
             hooks,
@@ -126,3 +134,16 @@ export class AuthModule {
     });
   }
 }
+
+/**
+   "ZNhlZ-si4r6",
+    "cR89B-uSvYA",
+    "IfrR6-87rAx",
+    "zjrpa-5fm2o",
+    "nxMWk-j5buL",
+    "oEIYK-XB2Dg",
+    "FjOrB-UGVY2",
+    "zGJke-ngWn7",
+    "9HiJN-nHIK0",
+    "IwiJ0-rxOhm"
+ */

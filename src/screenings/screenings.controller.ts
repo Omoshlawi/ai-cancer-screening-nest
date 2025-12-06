@@ -70,17 +70,7 @@ export class ScreeningsController {
   @ApiOperation({ summary: 'Get a screening by ID' })
   @ApiOkResponse({ type: ScreeningDto })
   @ApiErrorsResponse()
-  findOne(
-    @Param('id') id: string,
-    @Session() session: UserSession,
-    @IpAddress() ipAddress: string | undefined,
-    @UserAgent() userAgent: string | undefined,
-  ) {
-    return this.screeningsService.findOne(
-      id,
-      session.user,
-      ipAddress,
-      userAgent,
-    );
+  findOne(@Param('id') id: string) {
+    return this.screeningsService.findOne(id);
   }
 }
