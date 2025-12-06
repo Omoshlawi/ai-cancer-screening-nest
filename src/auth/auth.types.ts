@@ -7,6 +7,7 @@ import {
   openAPI,
   twoFactor,
   username,
+  phoneNumber,
 } from 'better-auth/plugins';
 import { adminConfig } from './auth.contants';
 
@@ -19,6 +20,7 @@ export type BetterAuthWithPlugins = ReturnType<
       ReturnType<typeof openAPI>,
       ReturnType<typeof jwt>,
       ReturnType<typeof twoFactor>,
+      ReturnType<typeof phoneNumber>,
     ];
   }>
 >;

@@ -7,6 +7,7 @@ import {
   openAPI,
   username,
   twoFactor,
+  phoneNumber,
 } from 'better-auth/plugins';
 import { PrismaClient } from '../../generated/prisma/client';
 import { adminConfig } from './auth.contants';
@@ -25,5 +26,6 @@ export const auth: BetterAuthWithPlugins = betterAuth({
     openAPI(),
     jwt(),
     twoFactor(),
+    phoneNumber(),
   ],
 });

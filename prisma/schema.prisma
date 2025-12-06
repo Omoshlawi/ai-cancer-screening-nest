@@ -36,9 +36,13 @@ model User {
   twoFactorEnabled Boolean?    @default(false)
   twofactors       TwoFactor[]
 
+  phoneNumber         String?
+  phoneNumberVerified Boolean?
+
   @@unique([email])
   @@unique([username])
   @@map("user")
+  @@unique([phoneNumber])
 }
 
 model Session {

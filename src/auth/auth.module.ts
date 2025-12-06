@@ -19,6 +19,7 @@ import {
   createAuthMiddleware,
   jwt,
   openAPI,
+  phoneNumber,
   twoFactor,
   username,
 } from 'better-auth/plugins';
@@ -101,6 +102,21 @@ export class AuthModule {
                     // console.log('Data ---------', user);
                     console.log('OTP ---------', otp);
                     // console.log('Request ---------', request);
+                  },
+                },
+              }),
+              phoneNumber({
+                sendOTP: ({ phoneNumber, code }, ctx) => {
+                  console.log('Phone Number ---------', phoneNumber);
+                  console.log('Code ---------', code);
+                },
+                // Optional: Auto-create user on verification
+                signUpOnVerification: {
+                  getTempEmail(phoneNumber) {
+                    return `${phoneNumber}@aicancerscreening.app`;
+                  },
+                  getTempName(phoneNumber) {
+                    return `${phoneNumber}@aicancerscreening.app`;
                   },
                 },
               }),
