@@ -11,6 +11,10 @@ import {
   UpdateHealthFacilityDto,
   FindNearestHealthFacilityDto,
 } from './health-facility.dto';
+import {
+  HealthFacility,
+  HealthFacilityType,
+} from '../../generated/prisma/browser';
 
 @Injectable()
 export class HealthFacilityService {
@@ -175,6 +179,12 @@ export class HealthFacilityService {
     };
   }
 
+  /**
+   * Find the nearest health facilities to a given location
+   * @param findNearestHealthFacilityDto - The latitude and longitude of the location to find the nearest health facilities to
+   * @returns The nearest health facilities to the given location
+   */
+
   async findNearest(
     findNearestHealthFacilityDto: FindNearestHealthFacilityDto,
   ) {
@@ -190,7 +200,7 @@ export class HealthFacilityService {
     const centerPoint = turf.point([lng, lat]);
     let currentDistanceKm = initialDistanceKm;
     let facilitiesWithDistance: Array<{
-      facility: any;
+      facility: HealthFacility & { type: HealthFacilityType };
       distanceKm: number;
     }> = [];
 
@@ -233,7 +243,6 @@ export class HealthFacilityService {
           ],
         },
         include: {
-          referrals: true,
           type: true,
         },
         // Fetch more than needed to account for distance filtering
@@ -305,7 +314,6 @@ export class HealthFacilityService {
     });
 
     // Return array of 10 nearest facilities (or fewer if not enough exist)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return result;
   }
 }
