@@ -18,11 +18,21 @@ import { HealthFacilityModule } from './health-facilities/health-facility.module
 import { HealthFacilityTypeModule } from './health-facility-types/health-facility-type.module';
 import { ReferralModule } from './referrals/referral.module';
 import { ActivitiesModule } from './activities/activities.module';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaConfig } from './prisma/prisma.config';
 
 @Module({
   imports: [
     ConfigifyModule.forRootAsync(),
-    PrismaModule,
+    PrismaModule.forRootAsync({
+      global: true,
+      useFactory: (config: PrismaConfig) => {
+        return {
+          adapter: new PrismaPg({ connectionString: config.databaseUrl }),
+        };
+      },
+      inject: [PrismaConfig],
+    }),
     ScheduleModule.forRoot(),
     CommonModule.register({ global: true }),
     AuthModule.forRoot(),

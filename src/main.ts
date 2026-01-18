@@ -131,7 +131,7 @@ async function bootstrap() {
 
   await app.listen(appConfig.port);
   logger.log(`Server is running on port ${appConfig.port}`);
-  logger.log(`Server URL: ${appConfig.betterAuthUrl}`);
+  logger.log(`Server URL: ${appConfig.betterAuthUrl}/api-doc`);
 }
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 bootstrap();

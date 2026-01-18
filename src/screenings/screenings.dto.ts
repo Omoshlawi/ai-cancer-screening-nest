@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { JsonValue } from '@prisma/client/runtime/library';
 import { Type } from 'class-transformer';
 import {
   IsDateString,
@@ -16,6 +15,7 @@ import {
 import { Screening } from '../../generated/prisma/client';
 import { PaginationControlsDto } from '../common/commond.dto';
 import { RiskInterpretation, ScoringResult } from './scoring.dto';
+import { JsonValue } from '@prisma/client/runtime/client';
 
 export enum ScreenBoolean {
   YES = 'YES',

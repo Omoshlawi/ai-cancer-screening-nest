@@ -1,13 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { JsonValue } from '@prisma/client/runtime/library';
-import { Type } from 'class-transformer';
+import { JsonValue } from '@prisma/client/runtime/client';
 import {
   IsDateString,
-  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
-  Min,
 } from 'class-validator';
 import { PaginationControlsDto, PaginationDto } from '../common/commond.dto';
 
