@@ -9,6 +9,8 @@
     "build": "nest build",
     "auth:gen": "pnpx @better-auth/cli generate --config ./src/auth/auth.cli.config.ts",
     "db": "prisma",
+    "db:seed": "ts-node scripts/seed.ts",
+    "db:seed:address-hierarchy": "ts-node scripts/seed-address-hierarchy.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
