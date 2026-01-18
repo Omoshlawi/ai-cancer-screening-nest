@@ -122,7 +122,9 @@ model Client {
   lastName      String
   dateOfBirth   DateTime
   phoneNumber   String
-  address       String
+  county        String
+  subcounty     String
+  ward          String
   nationalId    String
   maritalStatus MaritalStatus
   createdById   String
@@ -276,7 +278,6 @@ model TwoFactor {
 
   @@map("twoFactor")
 }
-
 
 model AddressHierarchy {
   id       String             @id @default(uuid())

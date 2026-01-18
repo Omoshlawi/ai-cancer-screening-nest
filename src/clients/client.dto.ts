@@ -67,13 +67,30 @@ export class CreateClientDto {
   phoneNumber: string;
 
   @ApiProperty({
-    description: 'The password of the client',
-    example: 'address',
+    description: 'The county of the client',
+    example: 'Kiambu',
   })
   @IsNotEmpty()
   @IsString()
   @MinLength(8)
-  address: string;
+  county: string;
+
+  @ApiProperty({
+    description: 'The subcounty of the client',
+    example: 'Juja',
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(8)
+  subcounty: string;
+  @ApiProperty({
+    description: 'The ward of the client',
+    example: 'Juja',
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(8)
+  ward: string;
 
   @ApiProperty({
     description: 'The national ID of the client',
@@ -97,6 +114,7 @@ export class UpdateClientDto {
   @ApiProperty({
     description: 'The first name of the client',
     example: 'John',
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -106,6 +124,7 @@ export class UpdateClientDto {
   @ApiProperty({
     description: 'The last name of the client',
     example: 'Doe',
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -115,6 +134,7 @@ export class UpdateClientDto {
   @ApiProperty({
     description: 'The date of birth of the client',
     example: '1990-01-01',
+    required: false,
   })
   @IsOptional()
   @Type(() => Date)
@@ -126,6 +146,7 @@ export class UpdateClientDto {
   @ApiProperty({
     description: 'The phone number of the client',
     example: '+254712345678',
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -137,6 +158,7 @@ export class UpdateClientDto {
   @ApiProperty({
     description: 'The email of the client',
     example: 'john.doe@example.com',
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -144,16 +166,41 @@ export class UpdateClientDto {
   email: string;
 
   @ApiProperty({
-    description: 'The address of the client',
-    example: '123 Main St, Anytown, USA',
+    description: 'The county of the client',
+    example: 'Kiambu',
+    required: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(8)
+  @IsOptional()
+  county: string;
+
+  @ApiProperty({
+    description: 'The subcounty of the client',
+    example: 'Juja',
+    required: false,
   })
   @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  address: string;
+  @MinLength(8)
+  subcounty: string;
+  @ApiProperty({
+    description: 'The ward of the client',
+    example: 'Juja',
+    required: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(8)
+  @IsOptional()
+  ward: string;
 
   @ApiProperty({
     description: 'The marital status of the client',
     example: 'single',
+    required: false,
   })
   @IsOptional()
   @IsEnum(MaritalStatus)
