@@ -20,6 +20,7 @@ import { ReferralModule } from './referrals/referral.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaConfig } from './prisma/prisma.config';
+import { AddressHierarchyModule } from './address-hierarchy/address-hierarchy.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { PrismaConfig } from './prisma/prisma.config';
     HealthFacilityTypeModule,
     ReferralModule,
     ActivitiesModule,
+    AddressHierarchyModule,
   ],
   controllers: [AppController],
   providers: [
