@@ -72,7 +72,7 @@ export class CreateClientDto {
   })
   @IsNotEmpty()
   @IsString()
-  @MinLength(8)
+  @MinLength(3)
   county: string;
 
   @ApiProperty({
@@ -81,7 +81,7 @@ export class CreateClientDto {
   })
   @IsNotEmpty()
   @IsString()
-  @MinLength(8)
+  @MinLength(3)
   subcounty: string;
   @ApiProperty({
     description: 'The ward of the client',
@@ -89,7 +89,7 @@ export class CreateClientDto {
   })
   @IsNotEmpty()
   @IsString()
-  @MinLength(8)
+  @MinLength(3)
   ward: string;
 
   @ApiProperty({
@@ -172,7 +172,7 @@ export class UpdateClientDto {
   })
   @IsNotEmpty()
   @IsString()
-  @MinLength(8)
+  @MinLength(3)
   @IsOptional()
   county: string;
 
@@ -184,7 +184,7 @@ export class UpdateClientDto {
   @IsOptional()
   @IsNotEmpty()
   @IsString()
-  @MinLength(8)
+  @MinLength(3)
   subcounty: string;
   @ApiProperty({
     description: 'The ward of the client',
@@ -193,7 +193,7 @@ export class UpdateClientDto {
   })
   @IsNotEmpty()
   @IsString()
-  @MinLength(8)
+  @MinLength(3)
   @IsOptional()
   ward: string;
 

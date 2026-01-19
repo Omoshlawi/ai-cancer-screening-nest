@@ -112,8 +112,9 @@ model CommunityHealthProvider {
   clients     Client[]
   screenings  Screening[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  followUps FollowUp[]
 }
 
 model Client {
@@ -132,8 +133,9 @@ model Client {
   screenings    Screening[]
   metadata      Json? // { riskInterpretation: RiskInterpretation, riskScore: number }
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  followUps FollowUp[]
 }
 
 enum MaritalStatus {
@@ -165,10 +167,17 @@ model Screening {
   smoking                                 SmokingStatus
   familyMemberDiagnosedWithCervicalCancer ScreenBoolean
   scoringResult                           Json? // { clientAge: number | null, breakdown: RiskFactorScore[], aggregateScore: number, interpretation: RiskInterpretation, shouldAutoScreen: boolean }
+  nextScreeningDate                       DateTime? // for morderate next 3 months and low its 3-5 yrs
 
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   referrals Referral[]
+
+  // Relation back to the follow-up that led to this screening
+  wasTriggeredBy FollowUp? @relation("ResolvingScreening")
+
+  // Relation to the follow-up this screening spawned
+  triggeredFollowUps FollowUp[] @relation("TriggeringScreening")
 }
 
 enum ScreenBoolean {
@@ -203,7 +212,7 @@ model HealthFacility {
   logo        String // Facility Logo
   coordinates Json // { latitude: number, longitude: number }
   typeId      String
-  type        HealthFacilityType @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  type        HealthFacilityType @relation(fields: [typeId], references: [id], onDelete: Cascade)
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   referrals   Referral[]
@@ -229,25 +238,6 @@ model FrequentlyAskedQuestion {
   updatedAt DateTime  @updatedAt
 
   @@map("frequently_asked_question")
-}
-
-enum ReferralStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
-}
-
-model Referral {
-  id               String         @id @default(cuid())
-  screeningId      String
-  screening        Screening      @relation(fields: [screeningId], references: [id], onDelete: Cascade)
-  appointmentTime  DateTime
-  additionalNotes  String?
-  healthFacilityId String
-  healthFacility   HealthFacility @relation(fields: [healthFacilityId], references: [id], onDelete: Cascade)
-  status           ReferralStatus
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
 }
 
 model UserActivity {
@@ -296,4 +286,167 @@ model AddressHierarchy {
   @@unique([country, code])
   @@index([country, level])
   @@index([parentId])
+}
+
+model Referral {
+  id String @id @default(cuid())
+
+  screeningId String
+  screening   Screening @relation(fields: [screeningId], references: [id], onDelete: Cascade)
+
+  healthFacilityId String
+  healthFacility   HealthFacility @relation(fields: [healthFacilityId], references: [id], onDelete: Cascade)
+
+  appointmentTime  DateTime
+  additionalNotes  String?
+  transportNeeded  Boolean   @default(false)
+  financialSupport Boolean   @default(false)
+  followUp         FollowUp?
+
+  // Final outcome
+  status      ReferralStatus @default(PENDING)
+  visitedDate DateTime?
+
+  // Sometimes "Positive/Negative" isn't enough for a medical record
+  testResult     TestOutcome?
+  finalDiagnosis String? // e.g., "Confirmed Stage 1" or "False Positive"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FollowUp {
+  id String @id @default(cuid())
+
+  clientId String
+  client   Client @relation(fields: [clientId], onDelete: Cascade, references: [id])
+
+  providerId String
+  provider   CommunityHealthProvider @relation(fields: [providerId], onDelete: Cascade, references: [id])
+
+  // For High Risk: This will be populated
+  referralId String?   @unique
+  referral   Referral? @relation(fields: [referralId], onDelete: Cascade, references: [id])
+
+  // The Trigger: The screening that CREATED this follow-up
+  triggerScreeningId String
+  triggerScreening   Screening @relation("TriggeringScreening", fields: [triggerScreeningId], references: [id])
+
+  // Flexible Goal Categorization
+  category FollowUpCategory
+  priority Priority         @default(MEDIUM)
+
+  // Scheduling
+  startDate DateTime @default(now()) // When CHP should start acting
+  dueDate   DateTime // The "Deadline" for the goal (e.g., 6 months for Moderate)
+
+  // Outcome Tracking
+  completedAt          DateTime?
+  outcomeNotes         String?
+  resolvingScreeningId String?    @unique // The new screening that RESOLVED this follow-up.his is null until the CHP actually performs the re-screening
+  resolvingScreening   Screening? @relation("ResolvingScreening", fields: [resolvingScreeningId], references: [id])
+
+  // Cancelation
+  cancelReason CancelReason? // Reason for stopping the follow-up (Categorical for reporting)
+  cancelNotes  String? // // Free text for specific details
+  canceledAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  outreachActions OutreachAction[] // Every step tracked here
+
+  @@index([referralId])
+  @@index([providerId])
+  @@index([clientId])
+}
+
+model OutreachAction {
+  id         String   @id @default(cuid())
+  followUpId String
+  followUp   FollowUp @relation(fields: [followUpId], references: [id], onDelete: Cascade)
+
+  // Action details
+  actionType OutreachType
+  actionDate DateTime
+  outcome    OutreachOutcome
+
+  // Contact details
+  contactMethod ContactMethod?
+  location      String? // For home visits: GPS/address
+  duration      Int? // Minutes spent
+
+  // Rich details
+  notes           String? // What was discussed, patient response
+  barriers        String? // Why patient hasn't visited (cost, transport, fear, etc.)
+  nextPlannedDate DateTime? // When CHP plans next contact
+
+  // Hospital verification
+  verifiedAtFacility    Boolean @default(false)
+  hospitalRegisterPhoto String? // Photo of register entry
+
+  createdAt DateTime @default(now())
+
+  @@index([followUpId])
+  @@index([actionDate])
+}
+
+enum TestOutcome {
+  POSITIVE
+  NEGATIVE
+}
+
+enum OutreachType {
+  PHONE_CALL
+  HOME_VISIT
+  SMS_SENT
+  FACILITY_VERIFICATION // CHP checked hospital register
+  // COMMUNITY_MEETING
+  // PEER_REFERRAL // Asked family/neighbor to encourage patient
+}
+
+enum OutreachOutcome {
+  PATIENT_CONTACTED // Spoke to patient
+  PATIENT_UNAVAILABLE // Not home, phone off
+  PATIENT_COMMITTED // Promised to visit facility
+  PATIENT_VISITED_FACILITY // Confirmed they went
+  PATIENT_REFUSED // Doesn't want to go
+  BARRIER_IDENTIFIED // Found obstacle (cost, transport, etc.)
+  LOST_CONTACT // Can't reach anymore
+}
+
+enum ContactMethod {
+  PHONE
+  IN_PERSON
+  SMS
+  WHATSAPP
+  COMMUNITY_LEADER
+}
+
+enum ReferralStatus {
+  PENDING
+  VISITED_PENDING_RESULTS // Patient went to hospital, but results aren't in the app yet
+  COMPLETED // Full loop finished (Visit + Results)
+  REFUSED // Patient reached but refused to go (Important for reporting!)
+}
+
+enum FollowUpCategory {
+  REFERRAL_ADHERENCE // Goal: Ensure they visit the hospital (High Risk)
+  RE_SCREENING_RECALL // Goal: Ensure they screen again in 6 months (Moderate Risk)
+  //Other Goals: Future-proofing  
+}
+
+enum Priority {
+  HIGH // High Risk cases
+  MEDIUM // Moderate Risk cases
+  LOW // Routine
+}
+
+enum CancelReason {
+  DECEASED // Patient has passed away
+  RELOCATED // Moved out of the community health area
+  UNREACHABLE // Lost to follow-up (e.g., after 5+ failed attempts)
+  REFUSED_SERVICE // Patient explicitly asked not to be contacted anymore
+  INCORRECT_DATA // Screening was a mistake or duplicate entry
+  HOSPITALIZED_OTHER // Patient is in the hospital for a different, unrelated issue
 }
