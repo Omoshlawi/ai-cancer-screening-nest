@@ -139,7 +139,7 @@ export class ReferralService {
           {
             screeningId: findReferralDto.screeningId ?? undefined,
             healthFacilityId: findReferralDto.healthFacilityId ?? undefined,
-            status: findReferralDto.status ?? undefined,
+            // status: findReferralDto.status ?? undefined,
           },
         ],
       },
@@ -295,9 +295,9 @@ export class ReferralService {
       throw new NotFoundException('Referral is already completed');
     }
 
-    if (referral.status === ReferralStatus.CANCELLED) {
-      throw new NotFoundException('Cannot complete a cancelled referral');
-    }
+    // if (referral.status === ReferralStatus.CANCELLED) {
+    //   throw new NotFoundException('Cannot complete a cancelled referral');
+    // }
 
     const completedReferral = await this.prismaService.referral.update({
       where: { id: referral.id },
@@ -348,9 +348,9 @@ export class ReferralService {
   ) {
     const referral = await this.findOne(id, user);
 
-    if (referral.status === ReferralStatus.CANCELLED) {
-      throw new NotFoundException('Referral is already cancelled');
-    }
+    // if (referral.status === ReferralStatus.CANCELLED) {
+    //   throw new NotFoundException('Referral is already cancelled');
+    // }
 
     if (referral.status === ReferralStatus.COMPLETED) {
       throw new NotFoundException('Cannot cancel a completed referral');
@@ -359,7 +359,7 @@ export class ReferralService {
     const cancelledReferral = await this.prismaService.referral.update({
       where: { id: referral.id },
       data: {
-        status: ReferralStatus.CANCELLED,
+        // status: ReferralStatus.CANCELLED,
       },
       include: {
         screening: {

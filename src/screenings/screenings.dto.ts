@@ -181,6 +181,10 @@ export class FindScreeningsDto {
 }
 
 export class ScreeningDto implements Screening {
+  @ApiProperty({
+    description: 'Date client is due for another screening',
+  })
+  nextScreeningDate: Date | null;
   @ApiProperty({ description: 'Scoring result', type: ScoringResult })
   @IsNotEmpty()
   @ValidateNested()
@@ -242,6 +246,11 @@ export class ScreeningDto implements Screening {
   })
   @IsEnum(ScreenBoolean)
   everScreenedForCervicalCancer: ScreenBoolean;
+  @ApiProperty({
+    description:
+      'Whether the client hasusd oral contraceptive for more than 5 years',
+    enum: ScreenBoolean,
+  })
   usedOralContraceptivesForMoreThan5Years: ScreenBoolean;
 
   @ApiProperty({
