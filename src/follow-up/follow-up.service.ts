@@ -232,7 +232,7 @@ export class FollowUpService {
     userAgent?: string,
   ) {
     const followUp = await this.prismaService.followUp.update({
-      where: { id },
+      where: { id, completedAt: null, canceledAt: null },
       data: {
         canceledAt: cancelFollowUpDto.canceledAt,
         cancelNotes: cancelFollowUpDto.cancelNotes,

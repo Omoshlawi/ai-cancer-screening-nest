@@ -12,7 +12,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Screening } from '../../generated/prisma/client';
+import { FollowUpCategory, Screening } from '../../generated/prisma/client';
 import { PaginationControlsDto } from '../common/commond.dto';
 import { RiskInterpretation, ScoringResult } from './scoring.dto';
 import { JsonValue } from '@prisma/client/runtime/client';
@@ -121,6 +121,22 @@ export class ScreenClientDto {
   @ValidateNested()
   @Type(() => CoordinatesDto)
   coordinates: CoordinatesDto;
+
+  // For follow-up
+  @ApiProperty({
+    description:
+      'Id of followup completed by this screening. Only used when followup category is ' +
+      FollowUpCategory.RE_SCREENING_RECALL,
+    required: false,
+  })
+  @IsOptional()
+  followUpId?: string;
+  @ApiProperty({
+    description: 'Followup outcome notes. If provided, must be with followUpId',
+    required: false,
+  })
+  @IsOptional()
+  outcomeNotes?: string;
 }
 
 export enum StringBoolean {

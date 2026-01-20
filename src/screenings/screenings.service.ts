@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
+import dayjs from 'dayjs';
 import { pick } from 'lodash';
-import { PaginationService } from '../common/pagination.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { FollowUpCategory } from '../../generated/prisma/browser';
 import { ActivitiesService } from '../activities/activities.service';
 import { UserSession } from '../auth/auth.types';
 import { FunctionFirstArgument } from '../common/common.types';
+import { PaginationService } from '../common/pagination.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { ScoringService } from './scoring.sevice';
 import {
   FindScreeningsDto,
@@ -76,6 +78,25 @@ export class ScreeningsService {
     };
   }
 
+  private async getFollowUp(providerId: string, followUpId?: string) {
+    if (followUpId) {
+      const followUp = await this.prismaService.followUp.findUnique({
+        where: {
+          id: followUpId,
+          providerId,
+          canceledAt: null,
+          completedAt: null,
+        },
+      });
+      if (!followUp) return null;
+      // Followup category must be rescreening else return null
+      if (followUp.category !== FollowUpCategory.RE_SCREENING_RECALL)
+        return null;
+      return followUp;
+    }
+    return null;
+  }
+
   async create(
     screenClientDto: ScreenClientDto,
     user: UserSession['user'],
@@ -88,6 +109,7 @@ export class ScreeningsService {
     if (!chp) {
       throw new NotFoundException('Community health provider not found');
     }
+
     const scoringResult = await this.scoringService.scoreClient(
       screenClientDto.clientId,
       screenClientDto,
@@ -119,7 +141,7 @@ export class ScreeningsService {
       },
     });
 
-    // Track activity
+    // Track screening creation activity
     await this.activitiesService.trackActivity(
       user.id,
       {
@@ -137,6 +159,39 @@ export class ScreeningsService {
       ipAddress,
       userAgent,
     );
+
+    // Get and complete follow-up
+    const followUp = await this.getFollowUp(chp.id, screenClientDto.followUpId);
+    if (followUp) {
+      // Complete followup
+      await this.prismaService.followUp.update({
+        where: { id: followUp.id },
+        data: {
+          completedAt: dayjs().toDate(),
+          resolvingScreeningId: screening.id,
+          outcomeNotes: screenClientDto.outcomeNotes,
+        },
+      });
+      // Track followup completion activity
+      await this.activitiesService.trackActivity(
+        user.id,
+        {
+          action: 'complete',
+          resource: 'followUp',
+          resourceId: followUp.id,
+          metadata: {
+            clientId: followUp.clientId,
+            clientName: `${screening.client.firstName} ${screening.client.lastName}`,
+            category: followUp.category,
+            priority: followUp.priority,
+            startDate: followUp.startDate.toISOString(),
+            dueDate: followUp.dueDate.toISOString(),
+          },
+        },
+        ipAddress,
+        userAgent,
+      );
+    }
 
     return screening;
   }
