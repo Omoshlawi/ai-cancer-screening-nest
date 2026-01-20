@@ -12,11 +12,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateReferralDto,
   FindReferralDto,
-  ReferralStatus,
   UpdateReferralDto,
 } from './referral.dto';
 import { ActivitiesService } from '../activities/activities.service';
 import { ScoringResult } from '../screenings/scoring.dto';
+import { ReferralStatus } from '../../generated/prisma/enums';
 
 @Injectable()
 export class ReferralService {

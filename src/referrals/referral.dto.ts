@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
 import {
   IsDateString,
   IsEnum,
@@ -6,13 +6,12 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import {
+  Referral,
+  ReferralStatus,
+  TestOutcome,
+} from '../../generated/prisma/client';
 import { PaginationControlsDto, PaginationDto } from '../common/commond.dto';
-
-export enum ReferralStatus {
-  PENDING = 'PENDING',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-}
 
 export class CreateReferralDto {
   @ApiProperty({
@@ -49,34 +48,9 @@ export class CreateReferralDto {
   healthFacilityId: string;
 }
 
-export class UpdateReferralDto {
-  @ApiProperty({
-    description: 'The appointment time',
-    example: '2024-12-25T10:00:00.000Z',
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  appointmentTime?: string;
-
-  @ApiProperty({
-    description: 'Additional notes for the referral',
-    example: 'Please bring your ID and previous test results',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  additionalNotes?: string;
-
-  @ApiProperty({
-    description: 'The ID of the health facility',
-    example: 'clx1234567890',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  healthFacilityId?: string;
-}
+export class UpdateReferralDto extends PartialType(
+  OmitType(CreateReferralDto, ['screeningId'] as const),
+) {}
 
 export class FindReferralDto extends PaginationDto {
   @ApiProperty({
@@ -178,7 +152,56 @@ export class HealthFacilityItemResponseDto {
   email: string;
 }
 
-export class ReferralResponseDto {
+export class ReferralResponseDto implements Referral {
+  @ApiProperty({
+    description: 'Status of the referral',
+    enum: ReferralStatus,
+    example: ReferralStatus.PENDING,
+  })
+  status: ReferralStatus;
+
+  @ApiProperty({
+    description:
+      'Indicates if transport assistance is needed for this referral',
+    type: Boolean,
+    example: true,
+  })
+  transportNeeded: boolean;
+
+  @ApiProperty({
+    description: 'Indicates if financial support is required for this referral',
+    type: Boolean,
+    example: false,
+  })
+  financialSupport: boolean;
+
+  @ApiProperty({
+    description: 'Date the referred client visited the facility, if applicable',
+    type: String,
+    format: 'date-time',
+    example: '2024-06-20T10:00:00.000Z',
+    required: false,
+    nullable: true,
+  })
+  visitedDate: Date | null;
+
+  @ApiProperty({
+    description: 'Result of the test performed at the health facility, if any',
+    enum: TestOutcome,
+    example: TestOutcome.POSITIVE,
+    required: false,
+    nullable: true,
+  })
+  testResult: TestOutcome | null;
+
+  @ApiProperty({
+    description: 'Final diagnosis given at the health facility, if provided',
+    type: String,
+    example: 'Tuberculosis',
+    required: false,
+    nullable: true,
+  })
+  finalDiagnosis: string | null;
   @ApiProperty({
     description: 'The ID of the referral',
     example: 'clx1234567890',
@@ -221,13 +244,6 @@ export class ReferralResponseDto {
     type: HealthFacilityItemResponseDto,
   })
   healthFacility: HealthFacilityItemResponseDto;
-
-  @ApiProperty({
-    description: 'The referral status',
-    enum: ReferralStatus,
-    example: ReferralStatus.PENDING,
-  })
-  status: ReferralStatus;
 
   @ApiProperty({
     description: 'The creation date',

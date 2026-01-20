@@ -22,6 +22,7 @@ import { PrismaConfig } from './prisma/prisma.config';
 import { PrismaModule } from './prisma/prisma.module';
 import { ReferralModule } from './referrals/referral.module';
 import { ScreeningsModule } from './screenings/screenings.module';
+import { FollowUpModule } from './follow-up/follow-up.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ScreeningsModule } from './screenings/screenings.module';
     ActivitiesModule,
     AddressHierarchyModule,
     BotModule,
+    FollowUpModule,
   ],
   controllers: [AppController],
   providers: [
