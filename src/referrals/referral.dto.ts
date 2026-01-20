@@ -1,5 +1,7 @@
 import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
+  IsDate,
   IsDateString,
   IsEnum,
   IsNotEmpty,
@@ -264,4 +266,36 @@ export class FindReferralResponseDto extends PaginationControlsDto {
     type: [ReferralResponseDto],
   })
   results: ReferralResponseDto[];
+}
+
+export class CompleteReferralDto {
+  @ApiProperty({
+    description:
+      'The date patient showed up at the facility to honour referral',
+    example: new Date().toISOString(),
+  })
+  @IsDate()
+  @Type(() => Date)
+  visitedDate: Date;
+  @ApiProperty({ enum: TestOutcome, description: 'Results of the actual test' })
+  @IsEnum(TestOutcome)
+  testResult: TestOutcome;
+  @ApiProperty({
+    description: "Positive/Negative result isn't enough for a medical record",
+    examples: ['False Positive', 'Confirmed Stage 1'],
+    required: false,
+  })
+  @IsOptional()
+  finalDiagnosis?: string;
+  // For follow-up
+  @ApiProperty({
+    description: 'Id of followup completed by this referral',
+  })
+  followUpId: string;
+  @ApiProperty({
+    description: 'Followup outcome notes',
+    required: false,
+  })
+  @IsOptional()
+  outcomeNotes?: string;
 }

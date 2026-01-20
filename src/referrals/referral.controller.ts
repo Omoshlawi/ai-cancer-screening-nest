@@ -5,29 +5,29 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
   Put,
   Query,
 } from '@nestjs/common';
-import { ReferralService } from './referral.service';
-import {
-  CreateReferralDto,
-  FindReferralDto,
-  UpdateReferralDto,
-  ReferralResponseDto,
-  FindReferralResponseDto,
-} from './referral.dto';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { Session } from '@thallesp/nestjs-better-auth';
 import { UserSession } from '../auth/auth.types';
+import { RequireChp } from '../chps/chp.decorators';
 import {
   ApiErrorsResponse,
-  OriginalUrl,
   IpAddress,
+  OriginalUrl,
   UserAgent,
 } from '../common/common.decorators';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
-import { RequireChp } from '../chps/chp.decorators';
+import {
+  CompleteReferralDto,
+  CreateReferralDto,
+  FindReferralDto,
+  FindReferralResponseDto,
+  ReferralResponseDto,
+  UpdateReferralDto,
+} from './referral.dto';
+import { ReferralService } from './referral.service';
 
 @Controller('referrals')
 @RequireChp()
@@ -109,25 +109,27 @@ export class ReferralController {
     return this.referralService.delete(id, session.user, ipAddress, userAgent);
   }
 
-  @Patch(':id/complete')
+  @Post(':id/complete')
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()
-  @ApiOperation({ summary: 'Mark a referral as completed' })
+  @ApiOperation({ summary: 'Complete Referral' })
   complete(
     @Param('id') id: string,
+    @Body() completeReferralDto: CompleteReferralDto,
     @Session() session: UserSession,
     @IpAddress() ipAddress: string | undefined,
     @UserAgent() userAgent: string | undefined,
   ) {
     return this.referralService.complete(
       id,
+      completeReferralDto,
       session.user,
       ipAddress,
       userAgent,
     );
   }
 
-  @Patch(':id/cancel')
+  @Post(':id/cancel')
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Cancel a referral' })

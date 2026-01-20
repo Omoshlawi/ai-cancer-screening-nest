@@ -10,6 +10,7 @@ import { FunctionFirstArgument } from '../common/common.types';
 import { PaginationService } from '../common/pagination.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  CompleteReferralDto,
   CreateReferralDto,
   FindReferralDto,
   UpdateReferralDto,
@@ -17,6 +18,7 @@ import {
 import { ActivitiesService } from '../activities/activities.service';
 import { ScoringResult } from '../screenings/scoring.dto';
 import { ReferralStatus } from '../../generated/prisma/enums';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class ReferralService {
@@ -285,24 +287,28 @@ export class ReferralService {
 
   async complete(
     id: string,
+    completeReferralDto: CompleteReferralDto,
     user: UserSession['user'],
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const referral = await this.findOne(id, user);
-
-    if (referral.status === ReferralStatus.COMPLETED) {
-      throw new NotFoundException('Referral is already completed');
-    }
-
-    // if (referral.status === ReferralStatus.CANCELLED) {
-    //   throw new NotFoundException('Cannot complete a cancelled referral');
-    // }
-
     const completedReferral = await this.prismaService.referral.update({
-      where: { id: referral.id },
+      where: {
+        id,
+        status: { in: ['PENDING', 'VISITED_PENDING_RESULTS'] },
+        followUp: { id: completeReferralDto.followUpId },
+      },
       data: {
         status: ReferralStatus.COMPLETED,
+        testResult: completeReferralDto.testResult,
+        visitedDate: completeReferralDto.visitedDate,
+        finalDiagnosis: completeReferralDto.finalDiagnosis,
+        followUp: {
+          update: {
+            completedAt: dayjs().toDate(),
+            outcomeNotes: completeReferralDto.outcomeNotes,
+          },
+        },
       },
       include: {
         screening: {
@@ -311,10 +317,11 @@ export class ReferralService {
           },
         },
         healthFacility: true,
+        followUp: true,
       },
     });
 
-    // Track activity
+    // Track refereal completion activity
     const scoringResult = completedReferral.screening
       .scoringResult as unknown as ScoringResult;
     await this.activitiesService.trackActivity(
@@ -331,6 +338,26 @@ export class ReferralService {
           healthFacilityName: completedReferral.healthFacility.name,
           riskScore: scoringResult.aggregateScore,
           riskInterpretation: scoringResult.interpretation,
+        },
+      },
+      ipAddress,
+      userAgent,
+    );
+
+    // Track followup completion activity
+    await this.activitiesService.trackActivity(
+      user.id,
+      {
+        action: 'complete',
+        resource: 'followUp',
+        resourceId: completeReferralDto.followUpId,
+        metadata: {
+          clientId: completedReferral.screening.clientId,
+          clientName: `${completedReferral.screening.client.firstName} ${completedReferral.screening.client.lastName}`,
+          category: completedReferral.followUp?.category,
+          priority: completedReferral.followUp?.priority,
+          startDate: completedReferral.followUp?.startDate?.toISOString(),
+          dueDate: completedReferral.followUp?.dueDate?.toISOString(),
         },
       },
       ipAddress,
