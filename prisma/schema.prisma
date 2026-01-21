@@ -383,7 +383,7 @@ model OutreachAction {
 
   // Hospital verification
   verifiedAtFacility    Boolean @default(false)
-  hospitalRegisterPhoto String? // Photo of register entry
+  hospitalRegisterPhoto String? // Photo of register entry // Future
 
   createdAt DateTime @default(now())
 

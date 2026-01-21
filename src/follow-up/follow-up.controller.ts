@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Session,
 } from '@nestjs/common';
 import { RequireChp } from '../chps/chp.decorators';
@@ -20,14 +21,25 @@ import {
 import {
   ApiErrorsResponse,
   IpAddress,
+  OriginalUrl,
   UserAgent,
 } from '../common/common.decorators';
 import { UserSession } from '../auth/auth.types';
+import {
+  CreateOutreachActionDto,
+  FindOutreachActionResponseDto,
+  OutreachActionsResponseDto,
+} from './follow-up.outreach.dto';
+import { FollowUpOutreachActionService } from './follow-up.outreach.service';
+import { PaginationDto } from '../common/commond.dto';
 
 @Controller('follow-up')
 @RequireChp()
 export class FollowUpController {
-  constructor(private readonly followUpService: FollowUpService) {}
+  constructor(
+    private readonly followUpService: FollowUpService,
+    private readonly outReachActionService: FollowUpOutreachActionService,
+  ) {}
 
   @Post()
   @ApiOkResponse({ type: FollowUpResponseDto })
@@ -104,6 +116,42 @@ export class FollowUpController {
       session.user,
       ipAddress,
       userAgent,
+    );
+  }
+  @Post(':id/outreach-action')
+  @ApiOkResponse({ type: OutreachActionsResponseDto })
+  @ApiErrorsResponse()
+  @ApiOperation({ summary: 'Create outreach action' })
+  createOutreachAction(
+    @Param('id') id: string,
+    @Body() createOutreachActionDto: CreateOutreachActionDto,
+    @Session() session: UserSession,
+    @IpAddress() ipAddress: string | undefined,
+    @UserAgent() userAgent: string | undefined,
+  ) {
+    return this.outReachActionService.create(
+      id,
+      createOutreachActionDto,
+      session.user,
+      ipAddress,
+      userAgent,
+    );
+  }
+  @Get(':id/outreach-action')
+  @ApiOkResponse({ type: FindOutreachActionResponseDto })
+  @ApiErrorsResponse()
+  @ApiOperation({ summary: 'Get outreach action' })
+  getOutreachAction(
+    @Param('id') id: string,
+    @Query() query: PaginationDto,
+    @Session() session: UserSession,
+    @OriginalUrl() originalUrl: string,
+  ) {
+    return this.outReachActionService.findAll(
+      id,
+      session.user,
+      query,
+      originalUrl,
     );
   }
 }
