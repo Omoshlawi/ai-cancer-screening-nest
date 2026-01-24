@@ -382,7 +382,6 @@ model OutreachAction {
   nextPlannedDate DateTime? // When CHP plans next contact
 
   // Hospital verification
-  verifiedAtFacility    Boolean @default(false)
   hospitalRegisterPhoto String? // Photo of register entry // Future
 
   createdAt DateTime @default(now())

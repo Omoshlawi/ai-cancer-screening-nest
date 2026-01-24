@@ -6,10 +6,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateOutreachActionDto } from './follow-up.outreach.dto';
 import { PaginationDto } from 'src/common/commond.dto';
 import { pick } from 'lodash';
+import { Inject } from '@nestjs/common';
 
 export class FollowUpOutreachActionService {
   constructor(
-    private readonly prismaService: PrismaService,
+    @Inject(PrismaService) private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
     private readonly activitiesService: ActivitiesService,
   ) {}
@@ -29,9 +30,18 @@ export class FollowUpOutreachActionService {
             actionDate: createOutreachDto.actionDate,
             actionType: createOutreachDto.actionType,
             outcome: createOutreachDto.outcome,
-            barriers: createOutreachDto.barriers,
+            barriers:
+              createOutreachDto.outcome === 'BARRIER_IDENTIFIED'
+                ? createOutreachDto.barriers
+                : undefined,
             contactMethod: createOutreachDto.contactMethod,
             duration: createOutreachDto.duration,
+            location:
+              createOutreachDto.actionType === 'HOME_VISIT'
+                ? createOutreachDto.location
+                : undefined,
+            nextPlannedDate: createOutreachDto.nextPlannedDate,
+            notes: createOutreachDto.notes,
           },
         },
       },

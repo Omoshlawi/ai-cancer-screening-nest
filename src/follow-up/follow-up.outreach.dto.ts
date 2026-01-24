@@ -1,10 +1,4 @@
-import {
-  IsBoolean,
-  IsDate,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-} from 'class-validator';
+import { IsDate, IsEnum, IsNumber, IsOptional } from 'class-validator';
 import {
   ContactMethod,
   OutreachOutcome,
@@ -64,15 +58,8 @@ export class CreateOutreachActionDto {
   })
   @IsOptional()
   @IsDate()
-  nextPlannedDate?: Date; //
-  @ApiProperty({
-    type: 'boolean',
-    description: 'Outcome for FACILITY_VERIFICATION outreach type',
-    example: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  verifiedAtFacility?: boolean;
+  @Type(() => Date)
+  nextPlannedDate?: Date;
 }
 
 export class OutreachActionsResponseDto implements OutreachAction {
