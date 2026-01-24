@@ -420,7 +420,7 @@ enum ContactMethod {
   IN_PERSON
   SMS
   WHATSAPP
-  COMMUNITY_LEADER
+  // COMMUNITY_LEADER
 }
 
 enum ReferralStatus {

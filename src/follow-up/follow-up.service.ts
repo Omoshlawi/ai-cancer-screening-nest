@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -12,8 +13,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   CancelFollowUpDto,
   CreateFollowUpDto,
+  FindFollowUpDto,
   UpdateFollowUpDto,
 } from './follow-up.dto';
+import { FunctionFirstArgument } from '../common/common.types';
+import { pick } from 'lodash';
 
 @Injectable()
 export class FollowUpService {
@@ -23,6 +27,73 @@ export class FollowUpService {
     private readonly activitiesService: ActivitiesService,
   ) {}
 
+  async findAll(
+    findFollowUpDto: FindFollowUpDto,
+    originalUrl: string,
+    user: UserSession['user'],
+  ) {
+    const chp = await this.prismaService.communityHealthProvider.findUnique({
+      where: { userId: user.id },
+    });
+    if (!chp) {
+      throw new NotFoundException('Community health provider not found');
+    }
+
+    const dbQuery: FunctionFirstArgument<
+      typeof this.prismaService.followUp.findMany
+    > = {
+      where: {
+        clientId: findFollowUpDto.clientId,
+        // providerId:
+        //   findFollowUpDto.includeForAllProviders === StringBoolean.TRUE
+        //     ? undefined
+        //     : (findFollowUpDto.providerId ?? chp.id),
+        canceledAt: {
+          gte: findFollowUpDto.cancelationDateFrom,
+          lte: findFollowUpDto.cancelationDateTo,
+        },
+        completedAt: {
+          gte: findFollowUpDto.completionDateFrom,
+          lte: findFollowUpDto.completionDateTo,
+        },
+        startDate: {
+          gte: findFollowUpDto.startDateFrom,
+          lte: findFollowUpDto.startDateTo,
+        },
+        dueDate: {
+          gte: findFollowUpDto.dueDateFrom,
+          lte: findFollowUpDto.dueDateTo,
+        },
+        category: findFollowUpDto.category,
+        priority: findFollowUpDto.priority,
+        triggerScreeningId: findFollowUpDto.triggerScreeningId,
+        resolvingScreeningId: findFollowUpDto.resolvingScreeningId,
+        referralId: findFollowUpDto.referralId,
+        providerId: chp.id,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        client: true,
+        provider: true,
+      },
+      ...this.paginationService.buildPaginationQuery(findFollowUpDto),
+    };
+    const [data, totalCount] = await Promise.all([
+      this.prismaService.followUp.findMany(dbQuery),
+      this.prismaService.followUp.count(pick(dbQuery, 'where')),
+    ]);
+    return {
+      results: data,
+      ...this.paginationService.buildPaginationControls(
+        totalCount,
+        originalUrl,
+        findFollowUpDto,
+      ),
+    };
+  }
+
   async create(
     createFollowUpDto: CreateFollowUpDto,
     user: UserSession['user'],
@@ -30,11 +101,19 @@ export class FollowUpService {
     userAgent?: string,
   ) {
     // Get the CHP for the current user
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
-      where: { userId: user.id },
+    const screening = await this.prismaService.screening.findUnique({
+      where: { id: createFollowUpDto.screeningId },
+      include: {
+        client: {
+          include: {
+            createdBy: true,
+          },
+        },
+      },
     });
 
-    if (!chp) {
+    if (!screening) throw new BadRequestException('screening not found');
+    if (screening.client.createdBy.userId !== user.id) {
       throw new ForbiddenException('User is not a Community Health Provider');
     }
 
@@ -42,6 +121,7 @@ export class FollowUpService {
       ? dayjs(createFollowUpDto.startDate).toDate()
       : undefined;
     const dueDate = dayjs(createFollowUpDto.dueDate).toDate();
+
     const followUp = await this.prismaService.followUp.create({
       data: {
         triggerScreeningId: createFollowUpDto.screeningId,
@@ -50,11 +130,11 @@ export class FollowUpService {
         startDate,
         dueDate,
         referralId:
-          createFollowUpDto.category === FollowUpCategory.RE_SCREENING_RECALL
-            ? undefined
-            : createFollowUpDto.referralId,
-        providerId: chp.id,
-        clientId: createFollowUpDto.clientId,
+          createFollowUpDto.category === FollowUpCategory.REFERRAL_ADHERENCE
+            ? createFollowUpDto.referralId
+            : undefined,
+        providerId: screening.client.createdById,
+        clientId: screening.clientId,
       },
       include: {
         triggerScreening: true,
@@ -74,7 +154,7 @@ export class FollowUpService {
         resource: 'followUp',
         resourceId: followUp.id,
         metadata: {
-          clientId: createFollowUpDto.clientId,
+          clientId: screening.clientId,
           clientName: `${followUp.client.firstName} ${followUp.client.lastName}`,
           category: followUp.category,
           priority: followUp.priority,

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { IsOptional, IsString, MinLength } from 'class-validator';
 
 export class ChatDto {
@@ -21,3 +21,5 @@ export class ChatDto {
   @IsOptional()
   threadId: string;
 }
+
+export class ChatQueryDto extends OmitType(ChatDto, ['threadId'] as const) {}

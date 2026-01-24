@@ -15,6 +15,8 @@ import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import {
   CancelFollowUpDto,
   CreateFollowUpDto,
+  FindFollowUpDto,
+  FindFollowUpResponseDto,
   FollowUpResponseDto,
   UpdateFollowUpDto,
 } from './follow-up.dto';
@@ -40,6 +42,23 @@ export class FollowUpController {
     private readonly followUpService: FollowUpService,
     private readonly outReachActionService: FollowUpOutreachActionService,
   ) {}
+
+  @Get()
+  @ApiErrorsResponse()
+  @ApiOperation({ summary: 'Get all Followups' })
+  @ApiOkResponse({ type: FindFollowUpResponseDto })
+  @ApiErrorsResponse()
+  findAll(
+    @Query() findFollowUpsDto: FindFollowUpDto,
+    @OriginalUrl() originalUrl: string,
+    @Session() session: UserSession,
+  ) {
+    return this.followUpService.findAll(
+      findFollowUpsDto,
+      originalUrl,
+      session.user,
+    );
+  }
 
   @Post()
   @ApiOkResponse({ type: FollowUpResponseDto })

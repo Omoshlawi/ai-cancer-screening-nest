@@ -17,16 +17,11 @@ import { Type } from 'class-transformer';
 
 export class CreateFollowUpDto {
   @ApiProperty({
-    description: 'The ID of the client',
-    example: 'clx1234567890',
-  })
-  @IsNotEmpty()
-  clientId: string;
-  @ApiProperty({
     description: 'The ID of the refreral',
     example: 'clx1234567890',
     required: false,
   })
+  @IsOptional()
   referralId?: string;
   @ApiProperty({
     description: 'The ID of the screening',
@@ -212,7 +207,141 @@ export class FollowUpResponseDto implements FollowUp {
   updatedAt: Date;
 }
 
-export class FindFollowUpDto extends PaginationDto {}
+export class FindFollowUpDto extends PaginationDto {
+  @ApiProperty({
+    description: 'Filter by client ID',
+    example: 'clx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  clientId?: string;
+  @ApiProperty({
+    description: 'Filter by referral ID',
+    example: 'rfx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  referralId?: string;
+  @ApiProperty({
+    description: 'Filter by screening ID that triggered the follow-up',
+    example: 'scx0987654321',
+    required: false,
+  })
+  @IsOptional()
+  triggerScreeningId?: string;
+  @ApiProperty({
+    description:
+      'Filter by follow-up category (e.g., REFERRAL_ADHERENCE, RE_SCREENING_RECALL)',
+    example: FollowUpCategory.REFERRAL_ADHERENCE,
+    enum: FollowUpCategory,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(FollowUpCategory)
+  category?: FollowUpCategory;
+  @ApiProperty({
+    description: 'Filter by follow-up priority (e.g., HIGH, MEDIUM, LOW)',
+    example: Priority.MEDIUM,
+    enum: Priority,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(Priority)
+  priority?: Priority;
+  @ApiProperty({
+    description:
+      'Start filtering follow-ups on or after this date (start date range lower bound)',
+    example: '2024-06-01T00:00:00.000Z',
+    format: 'date-time',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  startDateFrom?: Date;
+  @ApiProperty({
+    description:
+      'Start filtering follow-ups on or before this date (start date range upper bound)',
+    example: '2024-06-30T23:59:59.999Z',
+    format: 'date-time',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  startDateTo?: Date;
+  @ApiProperty({
+    description:
+      'Filter for follow-ups due on or after this date (due date range lower bound)',
+    example: '2024-07-01T00:00:00.000Z',
+    format: 'date-time',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  dueDateFrom?: Date;
+  @ApiProperty({
+    description:
+      'Filter for follow-ups due on or before this date (due date range upper bound)',
+    example: '2024-07-31T23:59:59.999Z',
+    format: 'date-time',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  dueDateTo?: Date;
+  @ApiProperty({
+    description: 'Filter for follow-ups completed on or after this date',
+    example: '2024-06-15T00:00:00.000Z',
+    format: 'date-time',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  completionDateFrom?: Date;
+  @ApiProperty({
+    description: 'Filter for follow-ups completed on or before this date',
+    example: '2024-06-20T23:59:59.999Z',
+    format: 'date-time',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  completionDateTo?: Date;
+  @ApiProperty({
+    description: 'Filter for follow-ups canceled on or after this date',
+    example: '2024-06-01T00:00:00.000Z',
+    format: 'date-time',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  cancelationDateFrom?: Date;
+
+  @ApiProperty({
+    description: 'Filter for follow-ups canceled on or before this date',
+    example: '2024-06-15T23:59:59.999Z',
+    format: 'date-time',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  cancelationDateTo?: Date;
+  @ApiProperty({
+    description:
+      'Filter for follow-ups resolved by a specific screening (resolving screening id)',
+    example: 'scrn_xxxxxxxx',
+    required: false,
+  })
+  @IsOptional()
+  resolvingScreeningId?: string;
+}
 export class FindFollowUpResponseDto extends PaginationControlsDto {
   @ApiProperty({
     description: 'The list of referrals',
