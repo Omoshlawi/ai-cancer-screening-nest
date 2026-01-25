@@ -305,8 +305,11 @@ export class ReferralService {
         finalDiagnosis: completeReferralDto.finalDiagnosis,
         followUp: {
           update: {
-            completedAt: dayjs().toDate(),
-            outcomeNotes: completeReferralDto.outcomeNotes,
+            where: { id: completeReferralDto.followUpId },
+            data: {
+              completedAt: dayjs().toDate(),
+              outcomeNotes: completeReferralDto.outcomeNotes,
+            },
           },
         },
       },

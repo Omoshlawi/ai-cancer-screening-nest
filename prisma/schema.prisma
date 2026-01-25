@@ -193,7 +193,7 @@ enum SmokingStatus {
 }
 
 model HealthFacilityType {
-  id               String           @id @default(cuid())
+  id               String           @id @default(uuid())
   name             String
   description      String?
   createdAt        DateTime         @default(now())
@@ -382,7 +382,7 @@ model OutreachAction {
   nextPlannedDate DateTime? // When CHP plans next contact
 
   // Hospital verification
-  hospitalRegisterPhoto String? // Photo of register entry // Future
+   hospitalRegisterPhoto String? // Photo of register entry // Future
 
   createdAt DateTime @default(now())
 

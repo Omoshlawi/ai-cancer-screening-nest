@@ -291,6 +291,7 @@ export class CompleteReferralDto {
   @ApiProperty({
     description: 'Id of followup completed by this referral',
   })
+  @IsNotEmpty()
   followUpId: string;
   @ApiProperty({
     description: 'Followup outcome notes',

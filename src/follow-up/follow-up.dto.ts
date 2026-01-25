@@ -352,10 +352,6 @@ export class FindFollowUpResponseDto extends PaginationControlsDto {
 }
 
 export class CancelFollowUpDto {
-  @IsDate()
-  @Type(() => Date)
-  @ApiProperty({ example: new Date().toISOString() })
-  canceledAt: Date;
   @IsOptional()
   @ApiProperty({ example: 'Client Died on 17th Oct 2023', required: false })
   cancelNotes?: string;

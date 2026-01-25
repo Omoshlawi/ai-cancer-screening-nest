@@ -110,13 +110,15 @@ export class ScreeningsService {
       throw new NotFoundException('Community health provider not found');
     }
 
+    const { followUpId, outcomeNotes, ...data } = screenClientDto;
+
     const scoringResult = await this.scoringService.scoreClient(
       screenClientDto.clientId,
       screenClientDto,
     );
     const screening = await this.prismaService.screening.create({
       data: {
-        ...screenClientDto,
+        ...data,
         providerId: chp.id,
         coordinates: {
           latitude: screenClientDto.coordinates.latitude,
@@ -161,7 +163,7 @@ export class ScreeningsService {
     );
 
     // Get and complete follow-up
-    const followUp = await this.getFollowUp(chp.id, screenClientDto.followUpId);
+    const followUp = await this.getFollowUp(chp.id, followUpId);
     if (followUp) {
       // Complete followup
       await this.prismaService.followUp.update({
@@ -169,7 +171,7 @@ export class ScreeningsService {
         data: {
           completedAt: dayjs().toDate(),
           resolvingScreeningId: screening.id,
-          outcomeNotes: screenClientDto.outcomeNotes,
+          outcomeNotes: outcomeNotes,
         },
       });
       // Track followup completion activity

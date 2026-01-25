@@ -75,8 +75,12 @@ export class FollowUpService {
         createdAt: 'desc',
       },
       include: {
+        triggerScreening: true,
         client: true,
         provider: true,
+        referral: true,
+        outreachActions: true,
+        resolvingScreening: true,
       },
       ...this.paginationService.buildPaginationQuery(findFollowUpDto),
     };
@@ -286,6 +290,14 @@ export class FollowUpService {
 
     await this.prismaService.followUp.delete({
       where: { id: followUp.id },
+      include: {
+        triggerScreening: true,
+        client: true,
+        provider: true,
+        referral: true,
+        outreachActions: true,
+        resolvingScreening: true,
+      },
     });
 
     // Track activity
@@ -314,7 +326,7 @@ export class FollowUpService {
     const followUp = await this.prismaService.followUp.update({
       where: { id, completedAt: null, canceledAt: null },
       data: {
-        canceledAt: cancelFollowUpDto.canceledAt,
+        canceledAt: dayjs().toDate(),
         cancelNotes: cancelFollowUpDto.cancelNotes,
         cancelReason: cancelFollowUpDto.cancelReason,
       },
