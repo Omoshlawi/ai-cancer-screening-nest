@@ -14,7 +14,12 @@ import {
 import { Type } from 'class-transformer';
 import { PHONE_NUMBER_REGEX } from '../common/common.contants';
 import { PaginationDto, PaginationControlsDto } from '../common/commond.dto';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  IntersectionType,
+  PartialType,
+  PickType,
+} from '@nestjs/swagger';
 import { Matches } from 'class-validator';
 
 export class CoordinatesDto {
@@ -33,6 +38,14 @@ export class CoordinatesDto {
 
 export class CreateHealthFacilityDto {
   @ApiProperty({
+    description: 'The mfl code of the health facility',
+    example: '1234',
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(3)
+  kmflCode: string;
+  @ApiProperty({
     description: 'The name of the health facility',
     example: 'Kenyatta National Hospital',
   })
@@ -40,44 +53,76 @@ export class CreateHealthFacilityDto {
   @IsString()
   @MinLength(3)
   name: string;
+  @ApiProperty({
+    description: 'The owner of the health facility',
+    example: 'Kenyatta National Hospital',
+    required: false,
+  })
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(3)
+  owner?: string;
 
   @ApiProperty({
-    description: 'The address of the health facility',
-    example: 'Hospital Road, Nairobi, Kenya',
+    description: 'The county of the health facility',
+    example: 'Kiambu',
   })
   @IsNotEmpty()
   @IsString()
+  @MinLength(3)
+  county: string;
+  @ApiProperty({
+    description: 'The subcounty of the health facility',
+    example: 'Juja',
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(3)
+  subcounty: string;
+  @ApiProperty({
+    description: 'The ward of the health facility',
+    example: 'Juja',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
   @MinLength(5)
-  address: string;
+  ward?: string;
 
   @ApiProperty({
     description: 'The phone number of the health facility',
     example: '+254712345678',
+    required: false,
   })
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   @Matches(PHONE_NUMBER_REGEX, {
     message: 'Phone number must be a valid Kenyan phone number',
   })
-  phoneNumber: string;
+  phoneNumber?: string;
 
   @ApiProperty({
     description: 'The email of the health facility',
     example: 'info@knh.ac.ke',
+    required: false,
   })
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @ApiProperty({
     description: 'The logo URL of the health facility',
     example: 'https://example.com/logo.png',
   })
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   @MinLength(3)
-  logo: string;
+  logo?: string;
 
   @ApiProperty({
     description: 'Geolocation coordinates',
@@ -165,41 +210,39 @@ export class UpdateHealthFacilityDto {
   typeId?: string;
 }
 
-export class FindHealthFacilityDto extends PaginationDto {
+export class FindHealthFacilityDto extends IntersectionType(
+  PaginationDto,
+  PartialType(
+    PickType(CreateHealthFacilityDto, [
+      'county',
+      'subcounty',
+      'ward',
+      'name',
+      'email',
+      'kmflCode',
+      'typeId',
+    ] as const),
+  ),
+) {
   @ApiProperty({
     description:
       'Search query to filter health facilities by name, address, or email',
     example: 'Kenyatta',
+    required: false,
   })
   @IsOptional()
   @IsString()
   @MinLength(1)
   search?: string;
-
   @ApiProperty({
-    description: 'The name of the health facility',
-    example: 'Kenyatta National Hospital',
+    description:
+      'The location of health facility.Could be county, subcounty or ward',
+    example: 'juja',
+    required: false,
   })
   @IsOptional()
   @IsString()
-  name?: string;
-
-  @ApiProperty({
-    description: 'The email of the health facility',
-    example: 'info@knh.ac.ke',
-  })
-  @IsOptional()
-  @IsString()
-  @IsEmail()
-  email?: string;
-
-  @ApiProperty({
-    description: 'The type ID of the health facility',
-    example: 'clx1234567890',
-  })
-  @IsOptional()
-  @IsString()
-  typeId?: string;
+  location?: string;
 }
 
 export class FindNearestHealthFacilityDto {

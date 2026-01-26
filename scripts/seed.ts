@@ -6,7 +6,11 @@ import path from 'path';
 
 declare const __dirname: string;
 
-const scripts = ['seed-address-hierarchy.ts'];
+const scripts = [
+  'seed-address-hierarchy.ts',
+  'seed-facility-types.ts',
+  'seed-health-facilities.ts',
+];
 
 async function runScript(scriptName: string): Promise<void> {
   return new Promise((resolve, reject) => {

@@ -42,12 +42,16 @@ export class HealthFacilityService {
     return this.prismaService.healthFacility.create({
       data: {
         name: createHealthFacilityDto.name,
-        address: createHealthFacilityDto.address,
+        county: createHealthFacilityDto.county,
+        subcounty: createHealthFacilityDto.subcounty,
+        ward: createHealthFacilityDto.ward,
         phoneNumber: createHealthFacilityDto.phoneNumber,
         email: createHealthFacilityDto.email,
         logo: createHealthFacilityDto.logo,
         coordinates: createHealthFacilityDto.coordinates as any,
         typeId: createHealthFacilityDto.typeId,
+        kmflCode: createHealthFacilityDto.kmflCode,
+        owner: createHealthFacilityDto.owner,
       },
       include: {
         referrals: true,
@@ -69,25 +73,47 @@ export class HealthFacilityService {
             name: findHealthFacilityDto.name ?? undefined,
             email: findHealthFacilityDto.email ?? undefined,
             typeId: findHealthFacilityDto.typeId ?? undefined,
+            kmflCode: findHealthFacilityDto.kmflCode ?? undefined,
+            county: findHealthFacilityDto.county ?? undefined,
+            subcounty: findHealthFacilityDto.subcounty ?? undefined,
+            ward: findHealthFacilityDto.ward ?? undefined,
           },
           {
             OR: findHealthFacilityDto.search
               ? [
+                  {
+                    kmflCode: {
+                      contains: findHealthFacilityDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
                   {
                     name: {
                       contains: findHealthFacilityDto.search,
                       mode: 'insensitive',
                     },
                   },
+                ]
+              : undefined,
+          },
+          {
+            OR: findHealthFacilityDto.location
+              ? [
                   {
-                    address: {
-                      contains: findHealthFacilityDto.search,
+                    county: {
+                      contains: findHealthFacilityDto.location,
                       mode: 'insensitive',
                     },
                   },
                   {
-                    email: {
-                      contains: findHealthFacilityDto.search,
+                    subcounty: {
+                      contains: findHealthFacilityDto.location,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    ward: {
+                      contains: findHealthFacilityDto.location,
                       mode: 'insensitive',
                     },
                   },

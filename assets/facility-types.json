@@ -1,0 +1,186 @@
+[
+    {
+        "id":"fae94c80-184e-49cf-8659-2fd7addc9169",
+        "facility_type":"Dispensary"
+    },
+    {
+        "id":"d496cf93-3688-4ff5-9e69-c31a72e8db5a",
+        "facility_type":"Health Centre"
+    },
+    {
+        "id":"81258270-9da5-4465-beb4-a7db631ef2e0",
+        "facility_type":"Medical Clinic"
+    },
+    {
+        "id":"2ea65391-7caa-4f3b-b4aa-b3e5f90b75e9",
+        "facility_type":"Primary care hospitals"
+    },
+    {
+        "id":"86664126-8193-40f3-ae3d-faea03575abc",
+        "facility_type":"VCT Centre (Stand-Alone)"
+    },
+    {
+        "id":"3ab6283f-069f-4734-974a-154162d3790e",
+        "facility_type":"VCT"
+    },
+    {
+        "id":"2387f2fb-76ea-4419-9ac2-67e7d20ec87b",
+        "facility_type":"Medical Center"
+    },
+    {
+        "id":"e0155537-2f0c-4871-a534-8ed503b8d33b",
+        "facility_type":"Basic Health Centre"
+    },
+    {
+        "id":"5050e3a7-d05b-437d-a68d-4f537d5adece",
+        "facility_type":"Comprehensive health Centre"
+    },
+    {
+        "id":"05b1bdcf-0ff1-488d-a113-f98c71b7f7a5",
+        "facility_type":"Nursing Homes"
+    },
+    {
+        "id":"e132436a-fcf4-4ee3-bbd3-f50158119ed3",
+        "facility_type":"Secondary care hospitals"
+    },
+    {
+        "id":"2d96b9d0-e361-464a-9109-a7e5dddb68f0",
+        "facility_type":"Regional Blood Transfusion Centre"
+    },
+    {
+        "id":"910b01b0-e364-401f-a5c4-6f00b69ab906",
+        "facility_type":"Nursing and Maternity Home"
+    },
+    {
+        "id":"9cfc2055-cf8a-44ae-acad-67d940d7aa52",
+        "facility_type":"Laboratory"
+    },
+    {
+        "id":"e395893c-b014-49cc-9cf0-5a5c2e4e5a9d",
+        "facility_type":"Other Hospital"
+    },
+    {
+        "id":"f5815852-81f1-4c2d-88cb-1d3b9c65f58b",
+        "facility_type":"Dental Clinic"
+    },
+    {
+        "id":"f389907c-d93f-4578-b1f4-bee61f691f8b",
+        "facility_type":"Nursing Home"
+    },
+    {
+        "id":"0e0c28f1-b664-48cb-8350-4024e356712b",
+        "facility_type":"Sub-District Hospital"
+    },
+    {
+        "id":"91a37c62-6022-47e7-a6c7-ee1e5f6695c5",
+        "facility_type":"Maternity Home"
+    },
+    {
+        "id":"8070d694-0e1e-4c76-b6c0-71606be92125",
+        "facility_type":"NURSING HOME"
+    },
+    {
+        "id":"6457013a-0ef6-43fb-ba0d-89166b831f88",
+        "facility_type":"Comprehensive Teaching & Tertiary Referral Hospital"
+    },
+    {
+        "id":"244b4497-8ed6-4cbc-956c-cbe4c975fff9",
+        "facility_type":"Medical Centre"
+    },
+    {
+        "id":"f2e2bd05-829f-4894-8254-8042ac3d7ace",
+        "facility_type":"Pharmacy"
+    },
+    {
+        "id":"b0e5a643-f3bf-4c0a-bec8-aa8d187983c1",
+        "facility_type":"Specialized & Tertiary Referral hospitals"
+    },
+    {
+        "id":"18e420d2-cbe6-43d5-a468-fa058730c66b",
+        "facility_type":"Laboratory (Stand-alone)"
+    },
+    {
+        "id":"bfeebbbc-ea73-47f8-840a-22a4934da8bb",
+        "facility_type":"Health Project"
+    },
+    {
+        "id":"1f7d0f51-eaf0-4c39-a91b-f42197e3028c",
+        "facility_type":"Health Programme"
+    },
+    {
+        "id":"6435739a-e9a7-460c-a0e2-5ee4debefd54",
+        "facility_type":"HOSPITALS"
+    },
+    {
+        "id":"fac5cabd-920e-4e4b-83b3-bceb89d9f6e2",
+        "facility_type":"District Hospital"
+    },
+    {
+        "id":"6f1ab801-15f9-44f8-b7e7-5a461377c612",
+        "facility_type":"Radiology Clinic"
+    },
+    {
+        "id":"a752ee29-7801-44d4-8644-5f556ea8fd13",
+        "facility_type":"Eye Centre"
+    },
+    {
+        "id":"4dc96c9a-346f-4b36-b8de-f03d1c2fd0ad",
+        "facility_type":"DISPENSARY"
+    },
+    {
+        "id":"ed79f82e-66cf-4c7c-8fd2-72f7964e6da8",
+        "facility_type":"Radiology Unit"
+    },
+    {
+        "id":"1848221b-3054-403c-89cc-38c347a9e552",
+        "facility_type":"Funeral Home (Stand-alone)"
+    },
+    {
+        "id":"9fdfb920-43e1-498e-b18a-596e4cbe5f02",
+        "facility_type":"Not in List"
+    },
+    {
+        "id":"010a061a-9769-478c-9979-72d946b2e2a9",
+        "facility_type":"Eye Clinic"
+    },
+    {
+        "id":"78dd4f39-2d1a-4ca7-8c7f-ffb84bc3352c",
+        "facility_type":"Blood Bank"
+    },
+    {
+        "id":"ccf0f2f2-5158-4010-82a2-28df643c7af1",
+        "facility_type":"STAND ALONE"
+    },
+    {
+        "id":"223ec346-f8a3-4d0f-bdb2-5ed13341aaab",
+        "facility_type":"MEDICAL CLINIC"
+    },
+    {
+        "id":"38a2bc8b-d6a4-4412-8edc-1c85cf5cf0df",
+        "facility_type":"MEDICAL CENTRE"
+    },
+    {
+        "id":"6c674f82-a7e5-496f-969e-d4fb397ed9ea",
+        "facility_type":"MEDICAL CENTER"
+    },
+    {
+        "id":"795f3c6d-a823-4bbd-92bc-d7b549d9d21d",
+        "facility_type":"Farewell Home"
+    },
+    {
+        "id":"053e1225-41db-4b0d-b570-4c73eaf7440e",
+        "facility_type":"Dispensaries and clinic-out patient only"
+    },
+    {
+        "id":"58808f33-c553-4e44-b205-dfe0d3afd59b",
+        "facility_type":"Ophthalmology"
+    },
+    {
+        "id":"162f0f24-7c2b-427c-b728-d5f8ebaeed7c",
+        "facility_type":"Rehab. Center - Drug and Substance abuse"
+    },
+    {
+        "id":"90f8619f-58f9-41df-b30a-8d081e6cfaeb",
+        "facility_type":"Dialysis Center"
+    }
+]
