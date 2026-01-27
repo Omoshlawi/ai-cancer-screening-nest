@@ -18,6 +18,7 @@ import {
 } from './follow-up.dto';
 import { FunctionFirstArgument } from '../common/common.types';
 import { pick } from 'lodash';
+import { PaginationDto } from 'src/common/commond.dto';
 
 @Injectable()
 export class FollowUpService {
@@ -26,6 +27,49 @@ export class FollowUpService {
     private readonly paginationService: PaginationService,
     private readonly activitiesService: ActivitiesService,
   ) {}
+
+  async findPending(
+    paginationDto: PaginationDto,
+    originalUrl: string,
+    user: UserSession['user'],
+  ) {
+    const chp = await this.prismaService.communityHealthProvider.findUnique({
+      where: { userId: user.id },
+    });
+    if (!chp) {
+      throw new NotFoundException('Community health provider not found');
+    }
+    const dbQuery: FunctionFirstArgument<
+      typeof this.prismaService.followUp.findMany
+    > = {
+      where: {
+        canceledAt: null,
+        completedAt: null,
+        providerId: chp.id,
+      },
+      include: {
+        triggerScreening: true,
+        client: true,
+        provider: true,
+        referral: true,
+        outreachActions: true,
+        resolvingScreening: true,
+      },
+      ...this.paginationService.buildPaginationQuery(paginationDto),
+    };
+    const [data, totalCount] = await Promise.all([
+      this.prismaService.followUp.findMany(dbQuery),
+      this.prismaService.followUp.count(pick(dbQuery, 'where')),
+    ]);
+    return {
+      results: data,
+      ...this.paginationService.buildPaginationControls(
+        totalCount,
+        originalUrl,
+        paginationDto,
+      ),
+    };
+  }
 
   async findAll(
     findFollowUpDto: FindFollowUpDto,

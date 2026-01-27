@@ -1,9 +1,5 @@
 import { IsDate, IsEnum, IsNumber, IsOptional } from 'class-validator';
-import {
-  ContactMethod,
-  OutreachOutcome,
-  OutreachType,
-} from '../../generated/prisma/enums';
+import { OutreachOutcome, OutreachType } from '../../generated/prisma/enums';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { OutreachAction } from '../../generated/prisma/client';
@@ -20,14 +16,6 @@ export class CreateOutreachActionDto {
   @ApiProperty({ enum: OutreachOutcome, example: OutreachOutcome.LOST_CONTACT })
   @IsEnum(OutreachOutcome)
   outcome: OutreachOutcome;
-  @ApiProperty({
-    enum: ContactMethod,
-    example: ContactMethod.PHONE,
-    required: false,
-  })
-  @IsEnum(ContactMethod)
-  @IsOptional()
-  contactMethod?: ContactMethod;
   @ApiProperty({
     description: 'Location address for home visits',
     required: false,
@@ -76,19 +64,10 @@ export class OutreachActionsResponseDto implements OutreachAction {
   @ApiProperty({
     enum: OutreachOutcome,
     description:
-      'Outcome of the outreach action (e.g., PATIENT_CONTACTED, BARRIER_IDENTIFIED)',
-    example: OutreachOutcome.PATIENT_CONTACTED,
+      'Outcome of the outreach action (e.g., PATIENT_UNAVAILABLE, BARRIER_IDENTIFIED)',
+    example: OutreachOutcome.PATIENT_UNAVAILABLE,
   })
   outcome: OutreachOutcome;
-
-  @ApiProperty({
-    enum: ContactMethod,
-    nullable: true,
-    description: 'How the patient was contacted (phone, in-person, SMS, etc.)',
-    example: ContactMethod.PHONE,
-    required: false,
-  })
-  contactMethod: ContactMethod | null;
 
   @ApiProperty({
     description: 'Location address for home visits (if applicable)',

@@ -34,7 +34,6 @@ export class FollowUpOutreachActionService {
               createOutreachDto.outcome === 'BARRIER_IDENTIFIED'
                 ? createOutreachDto.barriers
                 : undefined,
-            contactMethod: createOutreachDto.contactMethod,
             duration: createOutreachDto.duration,
             location:
               createOutreachDto.actionType === 'HOME_VISIT'
@@ -65,8 +64,7 @@ export class FollowUpOutreachActionService {
           clientName: `${followUp.client.firstName} ${followUp.client.lastName}`,
           actionDate: outreach.actionDate.toISOString(),
           actionType: outreach.actionType,
-          contactMethod: outreach.contactMethod,
-          outcome: outreach.contactMethod,
+          outcome: outreach.outcome,
         },
       },
       ipAddress,

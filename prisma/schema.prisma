@@ -388,7 +388,6 @@ model OutreachAction {
   outcome    OutreachOutcome
 
   // Contact details
-  contactMethod ContactMethod?
   location      String? // For home visits: GPS/address
   duration      Int? // Minutes spent
 
@@ -422,21 +421,13 @@ enum OutreachType {
 }
 
 enum OutreachOutcome {
-  PATIENT_CONTACTED // Spoke to patient
+  // PATIENT_CONTACTED // Spoke to patient
   PATIENT_UNAVAILABLE // Not home, phone off
   PATIENT_COMMITTED // Promised to visit facility
   PATIENT_VISITED_FACILITY // Confirmed they went
   PATIENT_REFUSED // Doesn't want to go
   BARRIER_IDENTIFIED // Found obstacle (cost, transport, etc.)
   LOST_CONTACT // Can't reach anymore
-}
-
-enum ContactMethod {
-  PHONE
-  IN_PERSON
-  SMS
-  WHATSAPP
-  // COMMUNITY_LEADER
 }
 
 enum ReferralStatus {

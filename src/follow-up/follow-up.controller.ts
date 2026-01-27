@@ -45,7 +45,7 @@ export class FollowUpController {
 
   @Get()
   @ApiErrorsResponse()
-  @ApiOperation({ summary: 'Get all Followups' })
+  @ApiOperation({ summary: 'Find all Followups' })
   @ApiOkResponse({ type: FindFollowUpResponseDto })
   @ApiErrorsResponse()
   findAll(
@@ -58,6 +58,18 @@ export class FollowUpController {
       originalUrl,
       session.user,
     );
+  }
+  @Get('pending')
+  @ApiErrorsResponse()
+  @ApiOperation({ summary: 'Find all pending Followups' })
+  @ApiOkResponse({ type: FindFollowUpResponseDto })
+  @ApiErrorsResponse()
+  findAllPending(
+    @Query() query: PaginationDto,
+    @OriginalUrl() originalUrl: string,
+    @Session() session: UserSession,
+  ) {
+    return this.followUpService.findPending(query, originalUrl, session.user);
   }
 
   @Post()
