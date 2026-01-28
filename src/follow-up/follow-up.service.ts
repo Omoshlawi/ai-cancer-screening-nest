@@ -18,7 +18,7 @@ import {
 } from './follow-up.dto';
 import { FunctionFirstArgument } from '../common/common.types';
 import { pick } from 'lodash';
-import { PaginationDto } from 'src/common/commond.dto';
+import { PaginationDto } from '../common/commond.dto';
 
 @Injectable()
 export class FollowUpService {

@@ -96,7 +96,7 @@ export class AuthModule {
               bearer(),
               openAPI(),
               jwt(),
-              twoFactor({
+              /*twoFactor({
                 otpOptions: {
                   sendOTP({ user, otp }, request) {
                     // console.log('Data ---------', user);
@@ -104,8 +104,8 @@ export class AuthModule {
                     // console.log('Request ---------', request);
                   },
                 },
-              }),
-              phoneNumber({
+              }),*/
+              /*phoneNumber({
                 sendOTP: ({ phoneNumber, code }, ctx) => {
                   console.log('Phone Number ---------', phoneNumber);
                   console.log('Code ---------', code);
@@ -119,7 +119,7 @@ export class AuthModule {
                     return `${phoneNumber}@aicancerscreening.app`;
                   },
                 },
-              }),
+              }),*/
             ],
             advanced: { disableOriginCheck: true },
             hooks,

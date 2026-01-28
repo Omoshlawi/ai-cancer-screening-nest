@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AddressHierarchy } from '../../generated/prisma/browser';
-import { PaginationDto } from 'src/common/commond.dto';
+import { PaginationDto } from '../common/commond.dto';
 import { IsOptional, IsString, MinLength } from 'class-validator';
 import { Type } from 'class-transformer';
 

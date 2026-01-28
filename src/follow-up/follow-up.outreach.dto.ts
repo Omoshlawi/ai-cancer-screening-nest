@@ -3,7 +3,7 @@ import { OutreachOutcome, OutreachType } from '../../generated/prisma/enums';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { OutreachAction } from '../../generated/prisma/client';
-import { PaginationControlsDto } from 'src/common/commond.dto';
+import { PaginationControlsDto } from '../common/commond.dto';
 
 export class CreateOutreachActionDto {
   @ApiProperty({ enum: OutreachType, example: OutreachType.PHONE_CALL })

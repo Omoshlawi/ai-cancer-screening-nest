@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { pick } from 'lodash';
 import { PrismaService } from '../prisma/prisma.service';
-import { PaginationService } from 'src/common/pagination.service';
+import { PaginationService } from '../common/pagination.service';
 import { FindAddressHierarchyDto } from './address-hierarchy.dto';
 import { FunctionFirstArgument } from '../common/common.types';
 

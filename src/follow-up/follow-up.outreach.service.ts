@@ -1,10 +1,10 @@
-import { FunctionFirstArgument } from 'src/common/common.types';
+import { FunctionFirstArgument } from '../common/common.types';
 import { ActivitiesService } from '../activities/activities.service';
 import { UserSession } from '../auth/auth.types';
 import { PaginationService } from '../common/pagination.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOutreachActionDto } from './follow-up.outreach.dto';
-import { PaginationDto } from 'src/common/commond.dto';
+import { PaginationDto } from '../common/commond.dto';
 import { pick } from 'lodash';
 import { Inject } from '@nestjs/common';
 
