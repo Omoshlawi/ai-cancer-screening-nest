@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   BadRequestException,
   ForbiddenException,
@@ -26,7 +28,7 @@ export class FollowUpService {
     private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
     private readonly activitiesService: ActivitiesService,
-  ) { }
+  ) {}
 
   async findPending(
     paginationDto: PaginationDto,
@@ -36,9 +38,11 @@ export class FollowUpService {
     const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
     const isAdmin = userRole?.toLowerCase() === 'admin';
 
-    const chp = !isAdmin ? await this.prismaService.communityHealthProvider.findUnique({
-      where: { userId: user.id },
-    }) : null;
+    const chp = !isAdmin
+      ? await this.prismaService.communityHealthProvider.findUnique({
+          where: { userId: user.id },
+        })
+      : null;
 
     if (!isAdmin && !chp) {
       throw new NotFoundException('Community health provider not found');
@@ -86,9 +90,11 @@ export class FollowUpService {
     const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
     const isAdmin = userRole?.toLowerCase() === 'admin';
 
-    const chp = !isAdmin ? await this.prismaService.communityHealthProvider.findUnique({
-      where: { userId: user.id },
-    }) : null;
+    const chp = !isAdmin
+      ? await this.prismaService.communityHealthProvider.findUnique({
+          where: { userId: user.id },
+        })
+      : null;
 
     if (!chp && !isAdmin) {
       throw new NotFoundException('Community health provider not found');
@@ -122,28 +128,68 @@ export class FollowUpService {
             triggerScreeningId: findFollowUpDto.triggerScreeningId,
             resolvingScreeningId: findFollowUpDto.resolvingScreeningId,
             referralId: findFollowUpDto.referralId,
-            providerId: isAdmin && findFollowUpDto.providerId ? findFollowUpDto.providerId : (findFollowUpDto.providerId || chp?.id),
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            providerId:
+              isAdmin && findFollowUpDto.providerId
+                ? findFollowUpDto.providerId
+                : findFollowUpDto.providerId || chp?.id,
           },
-          findFollowUpDto.search ? {
-            OR: [
-              {
-                client: {
-                  OR: [
-                    { firstName: { contains: findFollowUpDto.search, mode: 'insensitive' } },
-                    { lastName: { contains: findFollowUpDto.search, mode: 'insensitive' } },
-                    { nationalId: { contains: findFollowUpDto.search, mode: 'insensitive' } },
-                  ]
-                }
-              },
-              { id: { contains: findFollowUpDto.search, mode: 'insensitive' } },
-              { triggerScreeningId: { contains: findFollowUpDto.search, mode: 'insensitive' } },
-              { referralId: { contains: findFollowUpDto.search, mode: 'insensitive' } },
-            ]
-          } : {},
-        ]
+          findFollowUpDto.search
+            ? {
+                OR: [
+                  {
+                    client: {
+                      OR: [
+                        {
+                          firstName: {
+                            contains: findFollowUpDto.search,
+                            mode: 'insensitive',
+                          },
+                        },
+                        {
+                          lastName: {
+                            contains: findFollowUpDto.search,
+                            mode: 'insensitive',
+                          },
+                        },
+                        {
+                          nationalId: {
+                            contains: findFollowUpDto.search,
+                            mode: 'insensitive',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                  {
+                    id: {
+                      contains: findFollowUpDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    triggerScreeningId: {
+                      contains: findFollowUpDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    referralId: {
+                      contains: findFollowUpDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                ],
+              }
+            : {},
+        ],
       },
       orderBy: findFollowUpDto.sortBy
-        ? { [findFollowUpDto.sortBy]: this.paginationService.getSortOrder(findFollowUpDto.sortOrder) }
+        ? {
+            [findFollowUpDto.sortBy]: this.paginationService.getSortOrder(
+              findFollowUpDto.sortOrder,
+            ),
+          }
         : { createdAt: 'desc' },
       include: {
         triggerScreening: true,
@@ -183,10 +229,9 @@ export class FollowUpService {
     const screening = await this.prismaService.screening.findUnique({
       where: { id: createFollowUpDto.screeningId },
       include: {
-        client: {
-          include: {
-            createdBy: true,
-          },
+        client: true,
+        provider: {
+          include: { user: true },
         },
       },
     });
@@ -194,8 +239,10 @@ export class FollowUpService {
     if (!screening) throw new BadRequestException('screening not found');
 
     // Ownership check (skip for admins)
-    if (!isAdmin && screening.client.createdBy.userId !== user.id) {
-      throw new ForbiddenException('User is not a Community Health Provider for this client');
+    if (!isAdmin && screening.provider.user.id !== user.id) {
+      throw new ForbiddenException(
+        'User is not a Community Health Provider for this client',
+      );
     }
 
     const startDate = createFollowUpDto.startDate
@@ -214,7 +261,7 @@ export class FollowUpService {
           createFollowUpDto.category === FollowUpCategory.REFERRAL_ADHERENCE
             ? createFollowUpDto.referralId
             : undefined,
-        providerId: screening.client.createdById,
+        providerId: screening.providerId,
         clientId: screening.clientId,
       },
       include: {
@@ -261,9 +308,11 @@ export class FollowUpService {
     const isAdmin = userRole?.toLowerCase() === 'admin';
 
     // Get the CHP for the current user
-    const chp = !isAdmin ? await this.prismaService.communityHealthProvider.findUnique({
-      where: { userId: user.id },
-    }) : null;
+    const chp = !isAdmin
+      ? await this.prismaService.communityHealthProvider.findUnique({
+          where: { userId: user.id },
+        })
+      : null;
 
     if (!isAdmin && !chp) {
       throw new ForbiddenException('User is not a Community Health Provider');
@@ -334,9 +383,11 @@ export class FollowUpService {
     const isAdmin = userRole?.toLowerCase() === 'admin';
 
     // Get the CHP for the current user
-    const chp = !isAdmin ? await this.prismaService.communityHealthProvider.findUnique({
-      where: { userId: user.id },
-    }) : null;
+    const chp = !isAdmin
+      ? await this.prismaService.communityHealthProvider.findUnique({
+          where: { userId: user.id },
+        })
+      : null;
 
     if (!isAdmin && !chp) {
       throw new ForbiddenException('User is not a Community Health Provider');

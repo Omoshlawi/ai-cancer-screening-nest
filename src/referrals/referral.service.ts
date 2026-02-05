@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {
   BadRequestException,
@@ -27,7 +28,7 @@ export class ReferralService {
     private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
     private readonly activitiesService: ActivitiesService,
-  ) { }
+  ) {}
 
   async create(
     createReferralDto: CreateReferralDto,
@@ -39,9 +40,11 @@ export class ReferralService {
     const isAdmin = userRole?.toLowerCase() === 'admin';
 
     // Get the CHP for the current user (nullable for admins)
-    const chp = !isAdmin ? await this.prismaService.communityHealthProvider.findUnique({
-      where: { userId: user.id },
-    }) : null;
+    const chp = !isAdmin
+      ? await this.prismaService.communityHealthProvider.findUnique({
+          where: { userId: user.id },
+        })
+      : null;
 
     if (!isAdmin && !chp) {
       throw new ForbiddenException('User is not a Community Health Provider');
@@ -127,9 +130,11 @@ export class ReferralService {
     const isAdmin = userRole?.toLowerCase() === 'admin';
 
     // Get the CHP for the current user
-    const chp = !isAdmin ? await this.prismaService.communityHealthProvider.findUnique({
-      where: { userId: user.id },
-    }) : null;
+    const chp = !isAdmin
+      ? await this.prismaService.communityHealthProvider.findUnique({
+          where: { userId: user.id },
+        })
+      : null;
 
     if (!chp && !isAdmin) {
       throw new ForbiddenException('User is not a Community Health Provider');
@@ -143,8 +148,7 @@ export class ReferralService {
           {
             screening: {
               providerId:
-                findReferralDto.providerId ??
-                (chp ? chp.id : undefined),
+                findReferralDto.providerId ?? (chp ? chp.id : undefined),
               clientId: findReferralDto.clientId ?? undefined,
             },
           },
@@ -153,32 +157,67 @@ export class ReferralService {
             healthFacilityId: findReferralDto.healthFacilityId ?? undefined,
             status: findReferralDto.status ?? undefined,
           },
-          findReferralDto.search ? {
-            OR: [
-              {
-                screening: {
-                  client: {
-                    OR: [
-                      { firstName: { contains: findReferralDto.search, mode: 'insensitive' } },
-                      { lastName: { contains: findReferralDto.search, mode: 'insensitive' } },
-                      { nationalId: { contains: findReferralDto.search, mode: 'insensitive' } },
-                    ]
-                  }
-                }
-              },
-              { screeningId: { contains: findReferralDto.search, mode: 'insensitive' } },
-              { id: { contains: findReferralDto.search, mode: 'insensitive' } },
-              {
-                healthFacility: {
-                  name: { contains: findReferralDto.search, mode: 'insensitive' }
-                }
+          findReferralDto.search
+            ? {
+                OR: [
+                  {
+                    screening: {
+                      client: {
+                        OR: [
+                          {
+                            firstName: {
+                              contains: findReferralDto.search,
+                              mode: 'insensitive',
+                            },
+                          },
+                          {
+                            lastName: {
+                              contains: findReferralDto.search,
+                              mode: 'insensitive',
+                            },
+                          },
+                          {
+                            nationalId: {
+                              contains: findReferralDto.search,
+                              mode: 'insensitive',
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                  {
+                    screeningId: {
+                      contains: findReferralDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    id: {
+                      contains: findReferralDto.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    healthFacility: {
+                      name: {
+                        contains: findReferralDto.search,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                ],
               }
-            ]
-          } : {},
+            : {},
         ],
       },
       orderBy: findReferralDto.sortBy
-        ? { [findReferralDto.sortBy]: this.paginationService.getSortOrder(findReferralDto.sortOrder) }
+        ? {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            [findReferralDto.sortBy]: this.paginationService.getSortOrder(
+              findReferralDto.sortOrder,
+            ),
+          }
         : { createdAt: 'desc' },
       include: {
         screening: {
@@ -211,9 +250,11 @@ export class ReferralService {
     const isAdmin = userRole?.toLowerCase() === 'admin';
 
     // Get the CHP for the current user
-    const chp = !isAdmin ? await this.prismaService.communityHealthProvider.findUnique({
-      where: { userId: user.id },
-    }) : null;
+    const chp = !isAdmin
+      ? await this.prismaService.communityHealthProvider.findUnique({
+          where: { userId: user.id },
+        })
+      : null;
 
     if (!chp && !isAdmin) {
       throw new ForbiddenException('User is not a Community Health Provider');
@@ -233,10 +274,10 @@ export class ReferralService {
           include: {
             outreachActions: {
               orderBy: {
-                actionDate: 'desc'
-              }
-            }
-          }
+                actionDate: 'desc',
+              },
+            },
+          },
         },
       },
     });
@@ -345,7 +386,7 @@ export class ReferralService {
 
     const existingReferral = await this.prismaService.referral.findUnique({
       where: { id },
-      include: { screening: true }
+      include: { screening: true },
     });
 
     if (!existingReferral) {
@@ -358,7 +399,9 @@ export class ReferralService {
         where: { userId: user.id },
       });
       if (!chp || existingReferral.screening.providerId !== chp.id) {
-        throw new ForbiddenException('You can only complete your own referrals');
+        throw new ForbiddenException(
+          'You can only complete your own referrals',
+        );
       }
     }
 
@@ -451,7 +494,7 @@ export class ReferralService {
 
     const existingReferral = await this.prismaService.referral.findUnique({
       where: { id },
-      include: { screening: true }
+      include: { screening: true },
     });
 
     if (!existingReferral) {

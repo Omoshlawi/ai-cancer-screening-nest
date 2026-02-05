@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { AuthService } from '@thallesp/nestjs-better-auth';
 import { pick } from 'lodash';
 import { BetterAuthWithPlugins, UserSession } from '../auth/auth.types';
@@ -15,7 +19,7 @@ export class ClientsService {
     private readonly authService: AuthService<BetterAuthWithPlugins>,
     private readonly paginationService: PaginationService,
     private readonly activitiesService: ActivitiesService,
-  ) { }
+  ) {}
 
   async create(
     createClientDto: CreateClientDto,
@@ -35,6 +39,14 @@ export class ClientsService {
 
     if (!chp) {
       throw new NotFoundException('Community health provider not found');
+    }
+
+    const clientWithSimilarNo = await this.prismaService.client.findFirst({
+      where: { phoneNumber: createClientDto.phoneNumber },
+    });
+
+    if (clientWithSimilarNo) {
+      throw new BadRequestException('Client with similar phone number exist');
     }
 
     const client = await this.prismaService.client.create({
@@ -83,63 +95,71 @@ export class ClientsService {
             createdById: findClientDto.createdById ?? undefined,
             metadata: findClientDto.risk
               ? {
-                path: ['riskInterpretation'],
-                equals: findClientDto.risk,
-              }
+                  path: ['riskInterpretation'],
+                  equals: findClientDto.risk,
+                }
               : undefined,
+            createdBy: {
+              userId: findClientDto.createdByUserId,
+            },
           },
           {
             OR: findClientDto.name
               ? [
-                {
-                  firstName: {
-                    contains: findClientDto.name,
-                    mode: 'insensitive',
+                  {
+                    firstName: {
+                      contains: findClientDto.name,
+                      mode: 'insensitive',
+                    },
                   },
-                },
-                {
-                  lastName: {
-                    contains: findClientDto.name,
-                    mode: 'insensitive',
+                  {
+                    lastName: {
+                      contains: findClientDto.name,
+                      mode: 'insensitive',
+                    },
                   },
-                },
-              ]
+                ]
               : undefined,
           },
           {
             OR: findClientDto.search
               ? [
-                {
-                  firstName: {
-                    contains: findClientDto.search,
-                    mode: 'insensitive',
+                  {
+                    firstName: {
+                      contains: findClientDto.search,
+                      mode: 'insensitive',
+                    },
                   },
-                },
-                {
-                  lastName: {
-                    contains: findClientDto.search,
-                    mode: 'insensitive',
+                  {
+                    lastName: {
+                      contains: findClientDto.search,
+                      mode: 'insensitive',
+                    },
                   },
-                },
-                {
-                  phoneNumber: {
-                    contains: findClientDto.search,
-                    mode: 'insensitive',
+                  {
+                    phoneNumber: {
+                      contains: findClientDto.search,
+                      mode: 'insensitive',
+                    },
                   },
-                },
-                {
-                  nationalId: {
-                    contains: findClientDto.search,
-                    mode: 'insensitive',
+                  {
+                    nationalId: {
+                      contains: findClientDto.search,
+                      mode: 'insensitive',
+                    },
                   },
-                },
-              ]
+                ]
               : undefined,
           },
         ],
       },
       orderBy: findClientDto.sortBy
-        ? { [findClientDto.sortBy]: this.paginationService.getSortOrder(findClientDto.sortOrder) }
+        ? {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+            [findClientDto.sortBy]: this.paginationService.getSortOrder(
+              findClientDto.sortOrder,
+            ),
+          }
         : { createdAt: 'desc' },
       include: {
         screenings: {
