@@ -4,17 +4,16 @@ import 'dotenv/config';
 import { spawn } from 'child_process';
 import path from 'path';
 
-declare const __dirname: string;
-
 const scripts = [
   'seed-address-hierarchy.ts',
   'seed-facility-types.ts',
   'seed-health-facilities.ts',
+  'seed-admin-user.ts',
 ];
 
 async function runScript(scriptName: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const scriptPath = path.join(__dirname, scriptName);
+    const scriptPath = path.join(process.cwd(), 'scripts', scriptName);
     console.log(`\n🚀 Running ${scriptName}...\n`);
 
     const child = spawn('npx', ['ts-node', scriptPath], {
