@@ -10,47 +10,73 @@ export class AddressHierarchyService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
-  ) {}
+  ) { }
 
   async findAll(query: FindAddressHierarchyDto, originalUrl: string) {
-    const dbQuery: FunctionFirstArgument<
-      typeof this.prismaService.addressHierarchy.findMany
-    > = {
-      where: {
-        AND: [
+    const where: any = {
+      AND: [],
+    };
+
+    // Base filters
+    const baseFilters: any = {};
+    if (query?.country) baseFilters.country = query.country;
+    if (query?.level !== undefined) baseFilters.level = query.level;
+    if (query?.code) baseFilters.code = query.code;
+    if (query?.name) baseFilters.name = query.name;
+    if (query?.nameLocal) baseFilters.nameLocal = query.nameLocal;
+    if (query?.parentId) baseFilters.parentId = query.parentId;
+
+    if (Object.keys(baseFilters).length > 0) {
+      where.AND.push(baseFilters);
+    }
+
+    // Parent filters
+    const parentFilters: any = {};
+    if (query?.parentCode) parentFilters.code = query.parentCode;
+    if (query?.parentCountry) parentFilters.country = query.parentCountry;
+    if (query?.parentLevel !== undefined) parentFilters.level = query.parentLevel;
+    if (query?.parentName) parentFilters.name = query.parentName;
+    if (query?.parentNameLocal) parentFilters.nameLocal = query.parentNameLocal;
+
+    if (Object.keys(parentFilters).length > 0) {
+      where.AND.push({ parent: parentFilters });
+    }
+
+    // Search filter
+    // Search filter
+    if (query.search) {
+      console.log(`[AddressHierarchy] Searching for: "${query.search}"`);
+      where.AND.push({
+        OR: [
           {
-            country: query?.country,
-            level: query?.level,
-            code: query?.code,
-            name: query?.name,
-            nameLocal: query?.nameLocal,
-            parentId: query?.parentId,
-            parent: {
-              code: query?.parentCode,
-              country: query?.parentCountry,
-              level: query?.parentLevel,
-              name: query?.parentName,
-              nameLocal: query?.parentNameLocal,
+            name: {
+              contains: query.search,
+              mode: 'insensitive',
             },
           },
           {
-            OR: query.search
-              ? [
-                  {
-                    name: {
-                      contains: query.search, //mode: 'insensitive'
-                    },
-                  },
-                ]
-              : undefined,
+            code: {
+              contains: query.search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            nameLocal: {
+              contains: query.search,
+              mode: 'insensitive',
+            },
           },
         ],
-      },
+      });
+    }
+
+    const dbQuery: any = {
+      where,
       ...this.paginationService.buildPaginationQuery(query),
     };
     const [data, totalCount] = await Promise.all([
       this.prismaService.addressHierarchy.findMany(dbQuery),
-      this.prismaService.addressHierarchy.count(pick(dbQuery, 'where')),
+      this.prismaService.addressHierarchy.count({ where }),
     ]);
     return {
       results: data,

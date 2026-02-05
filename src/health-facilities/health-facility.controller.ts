@@ -26,7 +26,7 @@ import { RequireSystemPermission } from '../auth/auth.decorators';
 
 @Controller('health-facilities')
 export class HealthFacilityController {
-  constructor(private readonly healthFacilityService: HealthFacilityService) {}
+  constructor(private readonly healthFacilityService: HealthFacilityService) { }
 
   @Post()
   @ApiOkResponse({ type: HealthFacilityResponseDto })
@@ -71,6 +71,32 @@ export class HealthFacilityController {
   ) {
     return this.healthFacilityService.findNearest(findNearestHealthFacilityDto);
   }
+
+  @Get('counties')
+  @ApiOkResponse()
+  @ApiOperation({ summary: 'Get all counties' })
+  @OptionalAuth()
+  getCounties() {
+    return this.healthFacilityService.getCounties();
+  }
+
+  @Get('subcounties')
+  @ApiOkResponse()
+  @ApiOperation({ summary: 'Get subcounties by county name' })
+  @OptionalAuth()
+  getSubcounties(@Query('county') county: string) {
+    return this.healthFacilityService.getSubcounties(county);
+  }
+
+  @Get('wards')
+  @ApiOkResponse()
+  @ApiOperation({ summary: 'Get wards by subcounty name' })
+  @OptionalAuth()
+  getWards(@Query('subcounty') subcounty: string) {
+    return this.healthFacilityService.getWards(subcounty);
+  }
+
+
 
   @Get(':id')
   @ApiOkResponse({ type: HealthFacilityResponseDto })
