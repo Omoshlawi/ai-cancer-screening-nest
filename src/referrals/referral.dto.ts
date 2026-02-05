@@ -52,7 +52,7 @@ export class CreateReferralDto {
 
 export class UpdateReferralDto extends PartialType(
   OmitType(CreateReferralDto, ['screeningId'] as const),
-) {}
+) { }
 
 export class FindReferralDto extends PaginationDto {
   @ApiProperty({
@@ -100,6 +100,15 @@ export class FindReferralDto extends PaginationDto {
   @IsOptional()
   @IsEnum(ReferralStatus)
   status?: ReferralStatus;
+
+  @ApiProperty({
+    description: 'Generic search query',
+    example: 'John Doe',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
 }
 
 export class ScreeningItemResponseDto {

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -16,47 +10,41 @@ datasource db {
 model User {
   id                      String                   @id
   name                    String
-  email                   String
+  email                   String                   @unique
   emailVerified           Boolean                  @default(false)
   image                   String?
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @default(now()) @updatedAt
-  username                String?
+  username                String?                  @unique
   displayUsername         String?
   role                    String?
   banned                  Boolean?                 @default(false)
   banReason               String?
   banExpires              DateTime?
-  sessions                Session[]
+  twoFactorEnabled        Boolean?                 @default(false)
+  phoneNumber             String?                  @unique
+  phoneNumberVerified     Boolean?
   accounts                Account[]
   communityHealthProvider CommunityHealthProvider?
+  sessions                Session[]
+  twofactors              TwoFactor[]
   activities              UserActivity[]
 
-  twoFactorEnabled Boolean?    @default(false)
-  twofactors       TwoFactor[]
-
-  phoneNumber         String?
-  phoneNumberVerified Boolean?
-
-  @@unique([email])
-  @@unique([username])
-  @@unique([phoneNumber])
   @@map("user")
 }
 
 model Session {
   id             String   @id
   expiresAt      DateTime
-  token          String
+  token          String   @unique
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   ipAddress      String?
   userAgent      String?
   userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   impersonatedBy String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@index([userId])
   @@map("session")
 }
@@ -66,7 +54,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -76,6 +63,7 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("account")
@@ -105,16 +93,15 @@ model Jwks {
 model CommunityHealthProvider {
   id          String      @id @default(cuid())
   userId      String      @unique
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   firstName   String
   lastName    String
   phoneNumber String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   clients     Client[]
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  followUps   FollowUp[]
   screenings  Screening[]
-
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  followUps FollowUp[]
 
   @@map("community_health_providers")
 }
@@ -131,35 +118,21 @@ model Client {
   nationalId    String
   maritalStatus MaritalStatus
   createdById   String
+  metadata      Json?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
   createdBy     CommunityHealthProvider @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  followUps     FollowUp[]
   screenings    Screening[]
-  metadata      Json? // { riskInterpretation: RiskInterpretation, riskScore: number }
-
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  followUps FollowUp[]
 
   @@map("clients")
 }
 
-enum MaritalStatus {
-  SINGLE
-  MARRIED
-  DIVORCED
-  WIDOWED
-  SEPARATED
-}
-
 model Screening {
-  id       String @id @default(cuid())
-  clientId String
-  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-
-  providerId String
-  provider   CommunityHealthProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
-
-  coordinates Json // { latitude: number, longitude: number }
-
+  id                                      String                  @id @default(cuid())
+  clientId                                String
+  providerId                              String
+  coordinates                             Json
   lifeTimePatners                         Int
   firstIntercourseAge                     Int
   everDiagnosedWithHIV                    ScreenBoolean
@@ -170,32 +143,17 @@ model Screening {
   usedOralContraceptivesForMoreThan5Years ScreenBoolean
   smoking                                 SmokingStatus
   familyMemberDiagnosedWithCervicalCancer ScreenBoolean
-  scoringResult                           Json? // { clientAge: number | null, breakdown: RiskFactorScore[], aggregateScore: number, interpretation: RiskInterpretation, shouldAutoScreen: boolean }
-  nextScreeningDate                       DateTime? // for morderate next 3 months and low its 3-5 yrs
-
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  referrals Referral[]
-
-  // Relation back to the follow-up that led to this screening
-  wasTriggeredBy FollowUp? @relation("ResolvingScreening")
-
-  // Relation to the follow-up this screening spawned
-  triggeredFollowUps FollowUp[] @relation("TriggeringScreening")
+  scoringResult                           Json?
+  nextScreeningDate                       DateTime?
+  createdAt                               DateTime                @default(now())
+  updatedAt                               DateTime                @updatedAt
+  wasTriggeredBy                          FollowUp?               @relation("ResolvingScreening")
+  triggeredFollowUps                      FollowUp[]              @relation("TriggeringScreening")
+  referrals                               Referral[]
+  client                                  Client                  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  provider                                CommunityHealthProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@map("screenings")
-}
-
-enum ScreenBoolean {
-  YES
-  NO
-  NOT_SURE
-}
-
-enum SmokingStatus {
-  CURRENTLY
-  NEVER
-  PAST
 }
 
 model HealthFacilityType {
@@ -211,20 +169,21 @@ model HealthFacilityType {
 
 model HealthFacility {
   id          String             @id @default(uuid())
-  kmflCode    String             @unique()
-  name        String // Facility Name 
+  kmflCode    String             @unique
+  name        String
+  address     String?
   county      String
   subcounty   String
   ward        String?
-  phoneNumber String? // Contact Phone Number
-  email       String? // Contact Email
-  logo        String? // Facility Logo
-  coordinates Json? // { latitude: number, longitude: number }
+  phoneNumber String?
+  email       String?
+  logo        String?
+  coordinates Json?
   owner       String?
   typeId      String
-  type        HealthFacilityType @relation(fields: [typeId], references: [id], onDelete: Cascade)
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
+  type        HealthFacilityType @relation(fields: [typeId], references: [id], onDelete: Cascade)
   referrals   Referral[]
 
   @@map("health_facilities")
@@ -245,9 +204,9 @@ model FrequentlyAskedQuestion {
   question  String
   answer    String
   topicId   String?
-  topic     FaqTopic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  topic     FaqTopic? @relation(fields: [topicId], references: [id])
 
   @@map("frequently_asked_questions")
 }
@@ -255,15 +214,15 @@ model FrequentlyAskedQuestion {
 model UserActivity {
   id          String   @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  action      String // e.g., "create", "update", "delete", "view"
-  resource    String // e.g., "screening", "client", "referral"
-  resourceId  String? // ID of the affected resource
-  metadata    Json? // Additional data about the activity
-  description String? // Human-readable description of the activity
+  action      String
+  resource    String
+  resourceId  String?
+  metadata    Json?
+  description String?
   ipAddress   String?
   userAgent   String?
   createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
@@ -282,18 +241,16 @@ model TwoFactor {
 }
 
 model AddressHierarchy {
-  id       String             @id @default(uuid())
-  country  String // ISO country code
-  level    Int // 1, 2, 3, 4, 5
-  parentId String? // Reference to parent level
-  parent   AddressHierarchy?  @relation("Hierarchy", fields: [parentId], references: [id])
-  children AddressHierarchy[] @relation("Hierarchy")
-
-  code      String // Unique code (e.g., "KE-30" for Nairobi County)
-  name      String // Display name
-  nameLocal String? // Local language name
-
-  voided Boolean @default(false)
+  id        String             @id @default(uuid())
+  country   String
+  level     Int
+  parentId  String?
+  code      String
+  name      String
+  nameLocal String?
+  voided    Boolean            @default(false)
+  parent    AddressHierarchy?  @relation("Hierarchy", fields: [parentId], references: [id])
+  children  AddressHierarchy[] @relation("Hierarchy")
 
   @@unique([country, code])
   @@index([country, level])
@@ -302,74 +259,50 @@ model AddressHierarchy {
 }
 
 model Referral {
-  id String @id @default(cuid())
-
-  screeningId String
-  screening   Screening @relation(fields: [screeningId], references: [id], onDelete: Cascade)
-
+  id               String         @id @default(cuid())
+  screeningId      String
   healthFacilityId String
-  healthFacility   HealthFacility @relation(fields: [healthFacilityId], references: [id], onDelete: Cascade)
-
   appointmentTime  DateTime
   additionalNotes  String?
-  transportNeeded  Boolean   @default(false)
-  financialSupport Boolean   @default(false)
+  transportNeeded  Boolean        @default(false)
+  financialSupport Boolean        @default(false)
+  status           ReferralStatus @default(PENDING)
+  visitedDate      DateTime?
+  testResult       TestOutcome?
+  finalDiagnosis   String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
   followUp         FollowUp?
-
-  // Final outcome
-  status      ReferralStatus @default(PENDING)
-  visitedDate DateTime?
-
-  // Sometimes "Positive/Negative" isn't enough for a medical record
-  testResult     TestOutcome?
-  finalDiagnosis String? // e.g., "Confirmed Stage 1" or "False Positive"
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  healthFacility   HealthFacility @relation(fields: [healthFacilityId], references: [id], onDelete: Cascade)
+  screening        Screening      @relation(fields: [screeningId], references: [id], onDelete: Cascade)
 
   @@map("referrals")
 }
 
 model FollowUp {
-  id String @id @default(cuid())
-
-  clientId String
-  client   Client @relation(fields: [clientId], onDelete: Cascade, references: [id])
-
-  providerId String
-  provider   CommunityHealthProvider @relation(fields: [providerId], onDelete: Cascade, references: [id])
-
-  // For High Risk: This will be populated
-  referralId String?   @unique
-  referral   Referral? @relation(fields: [referralId], onDelete: Cascade, references: [id])
-
-  // The Trigger: The screening that CREATED this follow-up
-  triggerScreeningId String
-  triggerScreening   Screening @relation("TriggeringScreening", fields: [triggerScreeningId], references: [id])
-
-  // Flexible Goal Categorization
-  category FollowUpCategory
-  priority Priority         @default(MEDIUM)
-
-  // Scheduling
-  startDate DateTime @default(now()) // When CHP should start acting
-  dueDate   DateTime // The "Deadline" for the goal (e.g., 6 months for Moderate)
-
-  // Outcome Tracking
+  id                   String                  @id @default(cuid())
+  clientId             String
+  providerId           String
+  referralId           String?                 @unique
+  triggerScreeningId   String
+  category             FollowUpCategory
+  priority             Priority                @default(MEDIUM)
+  startDate            DateTime                @default(now())
+  dueDate              DateTime
   completedAt          DateTime?
   outcomeNotes         String?
-  resolvingScreeningId String?    @unique // The new screening that RESOLVED this follow-up.his is null until the CHP actually performs the re-screening
-  resolvingScreening   Screening? @relation("ResolvingScreening", fields: [resolvingScreeningId], references: [id])
-
-  // Cancelation
-  cancelReason CancelReason? // Reason for stopping the follow-up (Categorical for reporting)
-  cancelNotes  String? // // Free text for specific details
-  canceledAt   DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  outreachActions OutreachAction[] // Every step tracked here
+  resolvingScreeningId String?                 @unique
+  cancelReason         CancelReason?
+  cancelNotes          String?
+  canceledAt           DateTime?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  client               Client                  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  provider             CommunityHealthProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  referral             Referral?               @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  resolvingScreening   Screening?              @relation("ResolvingScreening", fields: [resolvingScreeningId], references: [id])
+  triggerScreening     Screening               @relation("TriggeringScreening", fields: [triggerScreeningId], references: [id])
+  outreachActions      OutreachAction[]
 
   @@index([referralId])
   @@index([providerId])
@@ -378,32 +311,43 @@ model FollowUp {
 }
 
 model OutreachAction {
-  id         String   @id @default(cuid())
-  followUpId String
-  followUp   FollowUp @relation(fields: [followUpId], references: [id], onDelete: Cascade)
-
-  // Action details
-  actionType OutreachType
-  actionDate DateTime
-  outcome    OutreachOutcome
-
-  // Contact details
-  location      String? // For home visits: GPS/address
-  duration      Int? // Minutes spent
-
-  // Rich details
-  notes           String? // What was discussed, patient response
-  barriers        String? // Why patient hasn't visited (cost, transport, fear, etc.)
-  nextPlannedDate DateTime? // When CHP plans next contact
-
-  // Hospital verification
-  hospitalRegisterPhoto String? // Photo of register entry // Future
-
-  createdAt DateTime @default(now())
+  id                    String          @id @default(cuid())
+  followUpId            String
+  actionType            OutreachType
+  actionDate            DateTime
+  outcome               OutreachOutcome
+  location              String?
+  duration              Int?
+  notes                 String?
+  barriers              String?
+  nextPlannedDate       DateTime?
+  hospitalRegisterPhoto String?
+  createdAt             DateTime        @default(now())
+  followUp              FollowUp        @relation(fields: [followUpId], references: [id], onDelete: Cascade)
 
   @@index([followUpId])
   @@index([actionDate])
   @@map("outreach_actions")
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+  SEPARATED
+}
+
+enum ScreenBoolean {
+  YES
+  NO
+  NOT_SURE
+}
+
+enum SmokingStatus {
+  CURRENTLY
+  NEVER
+  PAST
 }
 
 enum TestOutcome {
@@ -415,45 +359,41 @@ enum OutreachType {
   PHONE_CALL
   HOME_VISIT
   SMS_SENT
-  FACILITY_VERIFICATION // CHP checked hospital register
-  // COMMUNITY_MEETING
-  // PEER_REFERRAL // Asked family/neighbor to encourage patient
+  FACILITY_VERIFICATION
 }
 
 enum OutreachOutcome {
-  // PATIENT_CONTACTED // Spoke to patient
-  PATIENT_UNAVAILABLE // Not home, phone off
-  PATIENT_COMMITTED // Promised to visit facility
-  PATIENT_VISITED_FACILITY // Confirmed they went
-  PATIENT_REFUSED // Doesn't want to go
-  BARRIER_IDENTIFIED // Found obstacle (cost, transport, etc.)
-  LOST_CONTACT // Can't reach anymore
+  PATIENT_UNAVAILABLE
+  PATIENT_COMMITTED
+  PATIENT_VISITED_FACILITY
+  PATIENT_REFUSED
+  BARRIER_IDENTIFIED
+  LOST_CONTACT
 }
 
 enum ReferralStatus {
   PENDING
-  VISITED_PENDING_RESULTS // Patient went to hospital, but results aren't in the app yet
-  COMPLETED // Full loop finished (Visit + Results)
-  REFUSED // Patient reached but refused to go (Important for reporting!)
+  VISITED_PENDING_RESULTS
+  COMPLETED
+  REFUSED
 }
 
 enum FollowUpCategory {
-  REFERRAL_ADHERENCE // Goal: Ensure they visit the hospital (High Risk)
-  RE_SCREENING_RECALL // Goal: Ensure they screen again in 6 months (Moderate Risk)
-  //Other Goals: Future-proofing  
+  REFERRAL_ADHERENCE
+  RE_SCREENING_RECALL
 }
 
 enum Priority {
-  HIGH // High Risk cases
-  MEDIUM // Moderate Risk cases
-  LOW // Routine
+  HIGH
+  MEDIUM
+  LOW
 }
 
 enum CancelReason {
-  DECEASED // Patient has passed away
-  RELOCATED // Moved out of the community health area
-  UNREACHABLE // Lost to follow-up (e.g., after 5+ failed attempts)
-  REFUSED_SERVICE // Patient explicitly asked not to be contacted anymore
-  INCORRECT_DATA // Screening was a mistake or duplicate entry
-  HOSPITALIZED_OTHER // Patient is in the hospital for a different, unrelated issue
+  DECEASED
+  RELOCATED
+  UNREACHABLE
+  REFUSED_SERVICE
+  INCORRECT_DATA
+  HOSPITALIZED_OTHER
 }

@@ -15,7 +15,7 @@ export class ActivitiesService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
-  ) {}
+  ) { }
 
   /**
    * Generate a human-readable description for an activity
@@ -126,9 +126,9 @@ export class ActivitiesService {
             : undefined,
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: findActivitiesDto.sortBy
+        ? { [findActivitiesDto.sortBy]: this.paginationService.getSortOrder(findActivitiesDto.sortOrder) }
+        : { createdAt: 'desc' },
       include: {
         user: {
           select: {

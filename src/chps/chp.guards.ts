@@ -19,7 +19,7 @@ export class RequireCHPGuard implements CanActivate {
     private readonly authService: AuthService<BetterAuthWithPlugins>,
     private reflector: Reflector,
     private prismaService: PrismaService,
-  ) {}
+  ) { }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Check for decorator on handler (method) first, then on class
     const requireChp =
@@ -48,6 +48,23 @@ export class RequireCHPGuard implements CanActivate {
     const chp = await this.prismaService.communityHealthProvider.findUnique({
       where: { userId: session.user.id },
     });
+
+    const userRole = Array.isArray(session.user.role) ? session.user.role[0] : session.user.role;
+    if (userRole?.toLowerCase() === 'admin') {
+      return true;
+    }
+
+    // Fallback: Check if they have the system permission to create clients anyway
+    const { success } = await this.authService.api.userHasPermission({
+      headers: fromNodeHeaders(request.headers),
+      body: {
+        permissions: { clients: ['create'] },
+      },
+    });
+    if (success) {
+      return true;
+    }
+
     if (!chp) {
       throw new ForbiddenException('Community health provider not found');
     }

@@ -15,7 +15,7 @@ export class ClientsService {
     private readonly authService: AuthService<BetterAuthWithPlugins>,
     private readonly paginationService: PaginationService,
     private readonly activitiesService: ActivitiesService,
-  ) {}
+  ) { }
 
   async create(
     createClientDto: CreateClientDto,
@@ -23,9 +23,20 @@ export class ClientsService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
+    let chp = await this.prismaService.communityHealthProvider.findUnique({
       where: { userId: user.id },
     });
+
+    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
+    if (!chp && userRole?.toLowerCase() === 'admin') {
+      // If Admin creates client, assign to first available CHP to satisfy DB constraint
+      chp = await this.prismaService.communityHealthProvider.findFirst();
+    }
+
+    if (!chp) {
+      throw new NotFoundException('Community health provider not found');
+    }
+
     const client = await this.prismaService.client.create({
       data: {
         firstName: createClientDto.firstName,
@@ -37,7 +48,7 @@ export class ClientsService {
         ward: createClientDto.ward,
         nationalId: createClientDto.nationalId,
         maritalStatus: createClientDto.maritalStatus,
-        createdById: chp!.id,
+        createdById: chp.id,
       },
     });
 
@@ -69,66 +80,67 @@ export class ClientsService {
           {
             phoneNumber: findClientDto.phoneNumber ?? undefined,
             nationalId: findClientDto.nationalId ?? undefined,
+            createdById: findClientDto.createdById ?? undefined,
             metadata: findClientDto.risk
               ? {
-                  path: ['riskInterpretation'],
-                  equals: findClientDto.risk,
-                }
+                path: ['riskInterpretation'],
+                equals: findClientDto.risk,
+              }
               : undefined,
           },
           {
             OR: findClientDto.name
               ? [
-                  {
-                    firstName: {
-                      contains: findClientDto.name,
-                      mode: 'insensitive',
-                    },
+                {
+                  firstName: {
+                    contains: findClientDto.name,
+                    mode: 'insensitive',
                   },
-                  {
-                    lastName: {
-                      contains: findClientDto.name,
-                      mode: 'insensitive',
-                    },
+                },
+                {
+                  lastName: {
+                    contains: findClientDto.name,
+                    mode: 'insensitive',
                   },
-                ]
+                },
+              ]
               : undefined,
           },
           {
             OR: findClientDto.search
               ? [
-                  {
-                    firstName: {
-                      contains: findClientDto.search,
-                      mode: 'insensitive',
-                    },
+                {
+                  firstName: {
+                    contains: findClientDto.search,
+                    mode: 'insensitive',
                   },
-                  {
-                    lastName: {
-                      contains: findClientDto.search,
-                      mode: 'insensitive',
-                    },
+                },
+                {
+                  lastName: {
+                    contains: findClientDto.search,
+                    mode: 'insensitive',
                   },
-                  {
-                    phoneNumber: {
-                      contains: findClientDto.search,
-                      mode: 'insensitive',
-                    },
+                },
+                {
+                  phoneNumber: {
+                    contains: findClientDto.search,
+                    mode: 'insensitive',
                   },
-                  {
-                    nationalId: {
-                      contains: findClientDto.search,
-                      mode: 'insensitive',
-                    },
+                },
+                {
+                  nationalId: {
+                    contains: findClientDto.search,
+                    mode: 'insensitive',
                   },
-                ]
+                },
+              ]
               : undefined,
           },
         ],
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: findClientDto.sortBy
+        ? { [findClientDto.sortBy]: this.paginationService.getSortOrder(findClientDto.sortOrder) }
+        : { createdAt: 'desc' },
       include: {
         screenings: {
           select: {

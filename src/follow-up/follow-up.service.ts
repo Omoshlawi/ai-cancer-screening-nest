@@ -26,26 +26,31 @@ export class FollowUpService {
     private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
     private readonly activitiesService: ActivitiesService,
-  ) {}
+  ) { }
 
   async findPending(
     paginationDto: PaginationDto,
     originalUrl: string,
     user: UserSession['user'],
   ) {
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
+    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
+    const isAdmin = userRole?.toLowerCase() === 'admin';
+
+    const chp = !isAdmin ? await this.prismaService.communityHealthProvider.findUnique({
       where: { userId: user.id },
-    });
-    if (!chp) {
+    }) : null;
+
+    if (!isAdmin && !chp) {
       throw new NotFoundException('Community health provider not found');
     }
+
     const dbQuery: FunctionFirstArgument<
       typeof this.prismaService.followUp.findMany
     > = {
       where: {
         canceledAt: null,
         completedAt: null,
-        providerId: chp.id,
+        providerId: isAdmin ? undefined : chp?.id,
       },
       include: {
         triggerScreening: true,
@@ -57,10 +62,12 @@ export class FollowUpService {
       },
       ...this.paginationService.buildPaginationQuery(paginationDto),
     };
+
     const [data, totalCount] = await Promise.all([
       this.prismaService.followUp.findMany(dbQuery),
       this.prismaService.followUp.count(pick(dbQuery, 'where')),
     ]);
+
     return {
       results: data,
       ...this.paginationService.buildPaginationControls(
@@ -76,10 +83,14 @@ export class FollowUpService {
     originalUrl: string,
     user: UserSession['user'],
   ) {
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
+    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
+    const isAdmin = userRole?.toLowerCase() === 'admin';
+
+    const chp = !isAdmin ? await this.prismaService.communityHealthProvider.findUnique({
       where: { userId: user.id },
-    });
-    if (!chp) {
+    }) : null;
+
+    if (!chp && !isAdmin) {
       throw new NotFoundException('Community health provider not found');
     }
 
@@ -87,37 +98,53 @@ export class FollowUpService {
       typeof this.prismaService.followUp.findMany
     > = {
       where: {
-        clientId: findFollowUpDto.clientId,
-        // providerId:
-        //   findFollowUpDto.includeForAllProviders === StringBoolean.TRUE
-        //     ? undefined
-        //     : (findFollowUpDto.providerId ?? chp.id),
-        canceledAt: {
-          gte: findFollowUpDto.cancelationDateFrom,
-          lte: findFollowUpDto.cancelationDateTo,
-        },
-        completedAt: {
-          gte: findFollowUpDto.completionDateFrom,
-          lte: findFollowUpDto.completionDateTo,
-        },
-        startDate: {
-          gte: findFollowUpDto.startDateFrom,
-          lte: findFollowUpDto.startDateTo,
-        },
-        dueDate: {
-          gte: findFollowUpDto.dueDateFrom,
-          lte: findFollowUpDto.dueDateTo,
-        },
-        category: findFollowUpDto.category,
-        priority: findFollowUpDto.priority,
-        triggerScreeningId: findFollowUpDto.triggerScreeningId,
-        resolvingScreeningId: findFollowUpDto.resolvingScreeningId,
-        referralId: findFollowUpDto.referralId,
-        providerId: chp.id,
+        AND: [
+          {
+            clientId: findFollowUpDto.clientId,
+            canceledAt: {
+              gte: findFollowUpDto.cancelationDateFrom,
+              lte: findFollowUpDto.cancelationDateTo,
+            },
+            completedAt: {
+              gte: findFollowUpDto.completionDateFrom,
+              lte: findFollowUpDto.completionDateTo,
+            },
+            startDate: {
+              gte: findFollowUpDto.startDateFrom,
+              lte: findFollowUpDto.startDateTo,
+            },
+            dueDate: {
+              gte: findFollowUpDto.dueDateFrom,
+              lte: findFollowUpDto.dueDateTo,
+            },
+            category: findFollowUpDto.category,
+            priority: findFollowUpDto.priority,
+            triggerScreeningId: findFollowUpDto.triggerScreeningId,
+            resolvingScreeningId: findFollowUpDto.resolvingScreeningId,
+            referralId: findFollowUpDto.referralId,
+            providerId: isAdmin && findFollowUpDto.providerId ? findFollowUpDto.providerId : (findFollowUpDto.providerId || chp?.id),
+          },
+          findFollowUpDto.search ? {
+            OR: [
+              {
+                client: {
+                  OR: [
+                    { firstName: { contains: findFollowUpDto.search, mode: 'insensitive' } },
+                    { lastName: { contains: findFollowUpDto.search, mode: 'insensitive' } },
+                    { nationalId: { contains: findFollowUpDto.search, mode: 'insensitive' } },
+                  ]
+                }
+              },
+              { id: { contains: findFollowUpDto.search, mode: 'insensitive' } },
+              { triggerScreeningId: { contains: findFollowUpDto.search, mode: 'insensitive' } },
+              { referralId: { contains: findFollowUpDto.search, mode: 'insensitive' } },
+            ]
+          } : {},
+        ]
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: findFollowUpDto.sortBy
+        ? { [findFollowUpDto.sortBy]: this.paginationService.getSortOrder(findFollowUpDto.sortOrder) }
+        : { createdAt: 'desc' },
       include: {
         triggerScreening: true,
         client: true,
@@ -128,10 +155,12 @@ export class FollowUpService {
       },
       ...this.paginationService.buildPaginationQuery(findFollowUpDto),
     };
+
     const [data, totalCount] = await Promise.all([
       this.prismaService.followUp.findMany(dbQuery),
       this.prismaService.followUp.count(pick(dbQuery, 'where')),
     ]);
+
     return {
       results: data,
       ...this.paginationService.buildPaginationControls(
@@ -148,7 +177,9 @@ export class FollowUpService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    // Get the CHP for the current user
+    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
+    const isAdmin = userRole?.toLowerCase() === 'admin';
+
     const screening = await this.prismaService.screening.findUnique({
       where: { id: createFollowUpDto.screeningId },
       include: {
@@ -161,8 +192,10 @@ export class FollowUpService {
     });
 
     if (!screening) throw new BadRequestException('screening not found');
-    if (screening.client.createdBy.userId !== user.id) {
-      throw new ForbiddenException('User is not a Community Health Provider');
+
+    // Ownership check (skip for admins)
+    if (!isAdmin && screening.client.createdBy.userId !== user.id) {
+      throw new ForbiddenException('User is not a Community Health Provider for this client');
     }
 
     const startDate = createFollowUpDto.startDate
@@ -224,13 +257,29 @@ export class FollowUpService {
     ipAddress?: string,
     userAgent?: string,
   ) {
+    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
+    const isAdmin = userRole?.toLowerCase() === 'admin';
+
     // Get the CHP for the current user
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
+    const chp = !isAdmin ? await this.prismaService.communityHealthProvider.findUnique({
       where: { userId: user.id },
+    }) : null;
+
+    if (!isAdmin && !chp) {
+      throw new ForbiddenException('User is not a Community Health Provider');
+    }
+
+    const existingFollowUp = await this.prismaService.followUp.findUnique({
+      where: { id },
     });
 
-    if (!chp) {
-      throw new ForbiddenException('User is not a Community Health Provider');
+    if (!existingFollowUp) {
+      throw new NotFoundException('Followup not found');
+    }
+
+    // Ownership check (skip for admins)
+    if (!isAdmin && existingFollowUp.providerId !== chp?.id) {
+      throw new ForbiddenException('You can only update your own followups');
     }
 
     const startDate = updateFollowUpDto.startDate
@@ -239,13 +288,13 @@ export class FollowUpService {
     const dueDate = updateFollowUpDto.dueDate
       ? dayjs(updateFollowUpDto.dueDate).toDate()
       : undefined;
+
     const followUp = await this.prismaService.followUp.update({
       where: { id },
       data: {
         priority: updateFollowUpDto.priority,
         startDate,
         dueDate,
-        providerId: chp.id,
       },
       include: {
         triggerScreening: true,
@@ -281,12 +330,15 @@ export class FollowUpService {
   }
 
   async findOne(id: string, user: UserSession['user']) {
-    // Get the CHP for the current user
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
-      where: { userId: user.id },
-    });
+    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
+    const isAdmin = userRole?.toLowerCase() === 'admin';
 
-    if (!chp) {
+    // Get the CHP for the current user
+    const chp = !isAdmin ? await this.prismaService.communityHealthProvider.findUnique({
+      where: { userId: user.id },
+    }) : null;
+
+    if (!isAdmin && !chp) {
       throw new ForbiddenException('User is not a Community Health Provider');
     }
 
@@ -306,8 +358,8 @@ export class FollowUpService {
       throw new NotFoundException('Followup not found');
     }
 
-    // Verify the referral belongs to this CHP's screening
-    if (followUp.providerId !== chp.id) {
+    // Verify ownership (skip for admins)
+    if (!isAdmin && followUp.providerId !== chp?.id) {
       throw new ForbiddenException(
         'You can only access followups for your own screenings',
       );
@@ -334,14 +386,6 @@ export class FollowUpService {
 
     await this.prismaService.followUp.delete({
       where: { id: followUp.id },
-      include: {
-        triggerScreening: true,
-        client: true,
-        provider: true,
-        referral: true,
-        outreachActions: true,
-        resolvingScreening: true,
-      },
     });
 
     // Track activity
@@ -367,6 +411,27 @@ export class FollowUpService {
     ipAddress?: string,
     userAgent?: string,
   ) {
+    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
+    const isAdmin = userRole?.toLowerCase() === 'admin';
+
+    const existingFollowUp = await this.prismaService.followUp.findUnique({
+      where: { id },
+    });
+
+    if (!existingFollowUp) {
+      throw new NotFoundException('Followup not found');
+    }
+
+    // Ownership check (skip for admins)
+    if (!isAdmin) {
+      const chp = await this.prismaService.communityHealthProvider.findUnique({
+        where: { userId: user.id },
+      });
+      if (!chp || existingFollowUp.providerId !== chp.id) {
+        throw new ForbiddenException('You can only cancel your own followups');
+      }
+    }
+
     const followUp = await this.prismaService.followUp.update({
       where: { id, completedAt: null, canceledAt: null },
       data: {
@@ -383,6 +448,7 @@ export class FollowUpService {
         resolvingScreening: true,
       },
     });
+
     const followUpData = {
       clientId: followUp.clientId,
       clientName: `${followUp.client.firstName} ${followUp.client.lastName}`,
@@ -391,6 +457,7 @@ export class FollowUpService {
       startDate: followUp.startDate.toISOString(),
       dueDate: followUp.dueDate.toISOString(),
     };
+
     await this.activitiesService.trackActivity(
       user.id,
       {
@@ -402,5 +469,7 @@ export class FollowUpService {
       ipAddress,
       userAgent,
     );
+
+    return followUp;
   }
 }

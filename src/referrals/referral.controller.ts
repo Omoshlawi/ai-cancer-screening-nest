@@ -29,12 +29,14 @@ import {
 } from './referral.dto';
 import { ReferralService } from './referral.service';
 
+import { RequireSystemPermission } from '../auth/auth.decorators';
+
 @Controller('referrals')
-@RequireChp()
 export class ReferralController {
-  constructor(private readonly referralService: ReferralService) {}
+  constructor(private readonly referralService: ReferralService) { }
 
   @Post()
+  @RequireChp()
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Create a new referral' })
@@ -53,6 +55,9 @@ export class ReferralController {
   }
 
   @Get()
+  @RequireSystemPermission({
+    referrals: ['list'],
+  })
   @ApiOkResponse({ type: FindReferralResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get all referrals for the current CHP' })
@@ -69,6 +74,9 @@ export class ReferralController {
   }
 
   @Get(':id')
+  @RequireSystemPermission({
+    referrals: ['list'],
+  })
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get a referral by ID' })
@@ -77,6 +85,7 @@ export class ReferralController {
   }
 
   @Put(':id')
+  @RequireChp()
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Update a referral by ID' })
@@ -97,6 +106,9 @@ export class ReferralController {
   }
 
   @Delete(':id')
+  @RequireSystemPermission({
+    referrals: ['delete'],
+  })
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Delete a referral by ID' })
@@ -110,6 +122,7 @@ export class ReferralController {
   }
 
   @Post(':id/complete')
+  @RequireChp()
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Complete Referral' })
@@ -130,6 +143,7 @@ export class ReferralController {
   }
 
   @Post(':id/cancel')
+  @RequireChp()
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Cancel a referral' })
