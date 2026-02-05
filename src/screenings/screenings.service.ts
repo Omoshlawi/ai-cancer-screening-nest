@@ -22,7 +22,7 @@ export class ScreeningsService {
     private readonly paginationService: PaginationService,
     private readonly scoringService: ScoringService,
     private readonly activitiesService: ActivitiesService,
-  ) { }
+  ) {}
 
   async findAll(
     findScreeningsDto: FindScreeningsDto,
@@ -46,7 +46,7 @@ export class ScreeningsService {
             clientId: findScreeningsDto.clientId,
             providerId:
               findScreeningsDto.includeForAllProviders === StringBoolean.TRUE ||
-                (!chp && user.role === 'admin')
+              (!chp && user.role === 'admin')
                 ? (findScreeningsDto.providerId ?? undefined)
                 : (findScreeningsDto.providerId ?? chp?.id),
             createdAt: {
@@ -55,31 +55,90 @@ export class ScreeningsService {
             },
             scoringResult: findScreeningsDto.risk
               ? {
-                path: ['interpretation'],
-                equals: findScreeningsDto.risk,
-              }
+                  path: ['interpretation'],
+                  equals: findScreeningsDto.risk,
+                }
               : undefined,
           },
           // Search filter
-          findScreeningsDto.search ? {
-            OR: [
-              { client: { firstName: { contains: findScreeningsDto.search, mode: 'insensitive' } } },
-              { client: { lastName: { contains: findScreeningsDto.search, mode: 'insensitive' } } },
-              { provider: { firstName: { contains: findScreeningsDto.search, mode: 'insensitive' } } },
-              { provider: { lastName: { contains: findScreeningsDto.search, mode: 'insensitive' } } },
-            ]
-          } : {},
+          findScreeningsDto.search
+            ? {
+                OR: [
+                  {
+                    client: {
+                      firstName: {
+                        contains: findScreeningsDto.search,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  {
+                    client: {
+                      lastName: {
+                        contains: findScreeningsDto.search,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  {
+                    provider: {
+                      firstName: {
+                        contains: findScreeningsDto.search,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  {
+                    provider: {
+                      lastName: {
+                        contains: findScreeningsDto.search,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                ],
+              }
+            : {},
           // Location filters
-          findScreeningsDto.county ? { client: { county: { equals: findScreeningsDto.county, mode: 'insensitive' } } } : {},
-          findScreeningsDto.subcounty ? { client: { subcounty: { equals: findScreeningsDto.subcounty, mode: 'insensitive' } } } : {},
-          findScreeningsDto.ward ? { client: { ward: { equals: findScreeningsDto.ward, mode: 'insensitive' } } } : {},
-        ] as any
+          findScreeningsDto.county
+            ? {
+                client: {
+                  county: {
+                    equals: findScreeningsDto.county,
+                    mode: 'insensitive',
+                  },
+                },
+              }
+            : {},
+          findScreeningsDto.subcounty
+            ? {
+                client: {
+                  subcounty: {
+                    equals: findScreeningsDto.subcounty,
+                    mode: 'insensitive',
+                  },
+                },
+              }
+            : {},
+          findScreeningsDto.ward
+            ? {
+                client: {
+                  ward: { equals: findScreeningsDto.ward, mode: 'insensitive' },
+                },
+              }
+            : {},
+        ] as any,
       },
-      orderBy: findScreeningsDto.sortBy ? {
-        [findScreeningsDto.sortBy]: this.paginationService.getSortOrder(findScreeningsDto.sortOrder)
-      } : {
-        createdAt: 'desc',
-      },
+      orderBy: findScreeningsDto.sortBy
+        ? {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            [findScreeningsDto.sortBy]: this.paginationService.getSortOrder(
+              findScreeningsDto.sortOrder,
+            ),
+          }
+        : {
+            createdAt: 'desc',
+          },
       include: {
         client: true,
         provider: true,

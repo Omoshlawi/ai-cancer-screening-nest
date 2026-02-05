@@ -95,11 +95,12 @@ export class CreateClientDto {
   @ApiProperty({
     description: 'The national ID of the client',
     example: '1234567890',
+    required: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @MinLength(6)
-  nationalId: string;
+  nationalId?: string;
 
   @ApiProperty({
     description: 'The marital status of the client',
@@ -153,7 +154,7 @@ export class UpdateClientDto {
   @Matches(PHONE_NUMBER_REGEX, {
     message: 'Phone number must be a valid Kenyan phone number',
   })
-  phoneNumber: string;
+  phoneNumber?: string;
 
   @ApiProperty({
     description: 'The email of the client',
@@ -236,10 +237,11 @@ export class FindClientDto extends PaginationDto {
   @ApiProperty({
     description: 'The national ID of the client',
     example: '1234567890',
+    required: false,
   })
   @IsOptional()
   @IsString()
-  nationalId: string;
+  nationalId?: string;
 
   @ApiProperty({
     description: 'Filter by latest screening risk interpretation',
@@ -258,4 +260,12 @@ export class FindClientDto extends PaginationDto {
   @IsOptional()
   @IsString()
   createdById?: string;
+  @ApiProperty({
+    description: 'Filter by the ID of the CHP User who created the client',
+    example: 'clx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  createdByUserId?: string;
 }

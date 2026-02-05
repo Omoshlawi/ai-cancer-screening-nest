@@ -111,11 +111,11 @@ model Client {
   firstName     String
   lastName      String
   dateOfBirth   DateTime
-  phoneNumber   String
+  phoneNumber   String                  @unique
   county        String
   subcounty     String
   ward          String
-  nationalId    String
+  nationalId    String?
   maritalStatus MaritalStatus
   createdById   String
   metadata      Json?
