@@ -151,7 +151,13 @@ export class AuthModule {
           }),
         };
       },
-      inject: [PrismaService, AppConfig, DiscoveryService, Reflector, MetadataScanner],
+      inject: [
+        PrismaService,
+        AppConfig,
+        DiscoveryService,
+        Reflector,
+        MetadataScanner,
+      ],
     });
   }
 }

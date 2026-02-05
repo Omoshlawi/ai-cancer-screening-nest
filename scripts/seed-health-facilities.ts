@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import path from 'path';
 import prisma from './prisma-instance';
 
 interface HealthFacilityData {
@@ -37,7 +38,9 @@ async function seedHealthFacilities(): Promise<void> {
     await prisma.$connect();
     console.log('✅ Database connection established');
 
-    const healthFacilities: HealthFacilityData[] = require('../assets/mfl.json');
+    const healthFacilitiesPath = path.join(process.cwd(), 'assets', 'mfl.json');
+    const healthFacilities: HealthFacilityData[] =
+      require(healthFacilitiesPath);
 
     // First, fetch all facility types and create a map by name for quick lookup
     const facilityTypes = await prisma.healthFacilityType.findMany();

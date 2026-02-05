@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import path from 'path';
 import prisma from './prisma-instance';
 
 interface County {
@@ -32,7 +33,12 @@ async function seedAddressHierarchy(): Promise<void> {
     await prisma.$connect();
     console.log('✅ Database connection established');
     const COUNTRY_CODE = 'KE';
-    const counties: County[] = require('../assets/kenyan-counties-subcounties-wards.json');
+    const countiesPath = path.join(
+      process.cwd(),
+      'assets',
+      'kenyan-counties-subcounties-wards.json',
+    );
+    const counties: County[] = require(countiesPath);
 
     for (const county of counties) {
       const countyCode = `${COUNTRY_CODE}-${county.code}`;

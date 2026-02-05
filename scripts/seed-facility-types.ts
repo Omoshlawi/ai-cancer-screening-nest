@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import path from 'path';
 import prisma from './prisma-instance';
 
 interface FacilityTypeData {
@@ -22,7 +23,12 @@ async function seedFacilityTypes(): Promise<void> {
     await prisma.$connect();
     console.log('✅ Database connection established');
 
-    const facilityTypes: FacilityTypeData[] = require('../assets/facility-types.json');
+    const facilityTypesPath = path.join(
+      process.cwd(),
+      'assets',
+      'facility-types.json',
+    );
+    const facilityTypes: FacilityTypeData[] = require(facilityTypesPath);
 
     let created = 0;
     let skipped = 0;
