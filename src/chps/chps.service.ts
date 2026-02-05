@@ -17,7 +17,7 @@ export class ChpsService {
     private readonly prismaService: PrismaService,
     private readonly authService: AuthService<BetterAuthWithPlugins>,
     private readonly paginationService: PaginationService,
-  ) {}
+  ) { }
 
   async create(createChpDto: CreateChpDto) {
     const isUsernameAvailable = await this.authService.api.isUsernameAvailable({
@@ -70,30 +70,41 @@ export class ChpsService {
           {
             OR: findChpDto.name
               ? [
-                  {
-                    firstName: {
-                      contains: findChpDto.name,
-                      mode: 'insensitive',
-                    },
+                {
+                  firstName: {
+                    contains: findChpDto.name,
+                    mode: 'insensitive',
                   },
-                  {
-                    lastName: {
-                      contains: findChpDto.name,
-                      mode: 'insensitive',
-                    },
+                },
+                {
+                  lastName: {
+                    contains: findChpDto.name,
+                    mode: 'insensitive',
                   },
-                ]
+                },
+              ]
               : undefined,
           },
         ],
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: findChpDto.sortBy
+        ? { [findChpDto.sortBy]: this.paginationService.getSortOrder(findChpDto.sortOrder) }
+        : { createdAt: 'desc' },
       ...this.paginationService.buildPaginationQuery(findChpDto),
     };
     const [data, totalCount] = await Promise.all([
-      this.prismaService.communityHealthProvider.findMany(dbQuery),
+      this.prismaService.communityHealthProvider.findMany({
+        ...dbQuery,
+        include: {
+          user: true,
+          _count: {
+            select: {
+              clients: true,
+              screenings: true,
+            },
+          },
+        },
+      }),
       this.prismaService.communityHealthProvider.count(pick(dbQuery, 'where')),
     ]);
 

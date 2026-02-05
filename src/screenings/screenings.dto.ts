@@ -13,7 +13,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { FollowUpCategory, Screening } from '../../generated/prisma/client';
-import { PaginationControlsDto } from '../common/commond.dto';
+import { PaginationControlsDto, PaginationDto } from '../common/commond.dto';
 import { RiskInterpretation, ScoringResult } from './scoring.dto';
 import { JsonValue } from '@prisma/client/runtime/client';
 
@@ -144,7 +144,39 @@ export enum StringBoolean {
   FALSE = 'false',
 }
 
-export class FindScreeningsDto {
+export class FindScreeningsDto extends PaginationDto {
+  @ApiProperty({
+    description: 'The search term (client or provider name)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiProperty({
+    description: 'Filter by county',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  county?: string;
+
+  @ApiProperty({
+    description: 'Filter by subcounty',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  subcounty?: string;
+
+  @ApiProperty({
+    description: 'Filter by ward',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  ward?: string;
+
   @ApiProperty({
     description: 'The cuid of the client',
     required: false,

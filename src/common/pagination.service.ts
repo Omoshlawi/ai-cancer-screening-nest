@@ -21,6 +21,12 @@ export class PaginationService {
     };
   }
 
+  getSortOrder(order?: string): 'asc' | 'desc' {
+    if (!order) return 'desc';
+    const normalized = order.toLowerCase();
+    return normalized === 'asc' ? 'asc' : 'desc';
+  }
+
   buildPaginationControls(
     totalCount: number,
     originalUrl: string,

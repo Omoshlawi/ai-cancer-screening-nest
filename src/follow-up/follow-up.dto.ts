@@ -5,6 +5,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsOptional,
+  IsString,
 } from 'class-validator';
 import { FollowUp } from '../../generated/prisma/client';
 import {
@@ -62,7 +63,7 @@ export class CreateFollowUpDto {
 
 export class UpdateFollowUpDto extends PartialType(
   PickType(CreateFollowUpDto, ['dueDate', 'priority', 'startDate'] as const),
-) {}
+) { }
 
 export class FollowUpResponseDto implements FollowUp {
   @ApiProperty({
@@ -341,6 +342,24 @@ export class FindFollowUpDto extends PaginationDto {
   })
   @IsOptional()
   resolvingScreeningId?: string;
+
+  @ApiProperty({
+    description: 'Filter by the ID of the CHP provider',
+    example: 'clx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  providerId?: string;
+
+  @ApiProperty({
+    description: 'Generic search query',
+    example: 'John Doe',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
 }
 export class FindFollowUpResponseDto extends PaginationControlsDto {
   @ApiProperty({

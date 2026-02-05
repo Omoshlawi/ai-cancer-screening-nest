@@ -25,6 +25,7 @@ import {
 } from 'better-auth/plugins';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { AppConfig } from '../config/app.config';
 import { adminConfig } from './auth.contants';
 import { AuthExtendedController } from './auth.controller';
 import { AuthHookHook } from './auth.hooks';
@@ -52,6 +53,7 @@ export class AuthModule {
       imports: [PrismaModule],
       useFactory(
         prisma: PrismaService,
+        config: AppConfig,
         discover: DiscoveryService,
         reflector: Reflector,
         metadataScanner: MetadataScanner,
@@ -90,6 +92,9 @@ export class AuthModule {
             database: prismaAdapter(prisma, {
               provider: 'postgresql',
             }),
+            baseURL: config.betterAuthUrl,
+            basePath: '/api/auth',
+            trustedOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000'],
             plugins: [
               username(),
               admin(adminConfig),
@@ -146,7 +151,7 @@ export class AuthModule {
           }),
         };
       },
-      inject: [PrismaService, DiscoveryService, Reflector, MetadataScanner],
+      inject: [PrismaService, AppConfig, DiscoveryService, Reflector, MetadataScanner],
     });
   }
 }

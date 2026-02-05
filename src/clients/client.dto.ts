@@ -249,4 +249,13 @@ export class FindClientDto extends PaginationDto {
   @IsOptional()
   @IsEnum(RiskInterpretation)
   risk?: RiskInterpretation;
+
+  @ApiProperty({
+    description: 'Filter by the ID of the CHP who created the client',
+    example: 'clx1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  createdById?: string;
 }
