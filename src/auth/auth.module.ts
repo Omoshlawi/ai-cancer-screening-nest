@@ -16,13 +16,14 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import {
   admin,
   bearer,
-  createAuthMiddleware,
   jwt,
   openAPI,
   phoneNumber,
   twoFactor,
   username,
 } from 'better-auth/plugins';
+import { createAuthMiddleware } from '@better-auth/core/api';
+
 import { PrismaModule } from '../prisma/prisma.module';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppConfig } from '../config/app.config';

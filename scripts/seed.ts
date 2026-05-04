@@ -11,6 +11,7 @@ const scripts = [
   'seed-admin-user.ts',
 ];
 
+
 async function runScript(scriptName: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const scriptPath = path.join(process.cwd(), 'scripts', scriptName);

@@ -31,8 +31,9 @@ export class RequireSystemPermissionsGuard implements CanActivate {
     const { success } = await this.authService.api.userHasPermission({
       headers: fromNodeHeaders(request.headers),
       body: {
-        permissions,
+        permissions: permissions as any,
       },
+
     });
     if (!success) {
       this.logger.warn(

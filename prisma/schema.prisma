@@ -7,6 +7,10 @@ datasource db {
   provider = "postgresql"
 }
 
+
+
+
+
 model User {
   id                      String                   @id @default(cuid())
   name                    String
@@ -397,3 +401,18 @@ enum CancelReason {
   INCORRECT_DATA
   HOSPITALIZED_OTHER
 }
+
+model Apk {
+  id        String   @id @default(cuid())
+  version   String
+  filename  String
+  url       String
+  size      String
+  notes     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("apks")
+}
+
