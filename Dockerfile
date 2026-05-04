@@ -1,5 +1,8 @@
 FROM node:22-alpine AS base
 
+# Enable pnpm via corepack
+RUN corepack enable
+
 WORKDIR /app
 
 # Install OS dependencies (if needed later) and ensure openssl is present for Prisma
@@ -9,19 +12,21 @@ RUN apk add --no-cache openssl
 ENV DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
 
 # Install dependencies separately for better caching
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml ./
 
-RUN npm ci
+RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY . .
 
 # Generate Prisma client and build the NestJS app
 # Use tsc directly to avoid file watcher issues in Nest CLI
-RUN npx prisma generate && npx tsc -p tsconfig.build.json
+RUN pnpm exec prisma generate && pnpm exec tsc -p tsconfig.build.json
 
 # Runtime stage (can be the same image to keep things simple)
 FROM node:22-alpine
+RUN corepack enable
+
 
 WORKDIR /app
 
