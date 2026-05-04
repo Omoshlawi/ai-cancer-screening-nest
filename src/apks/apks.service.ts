@@ -15,7 +15,6 @@ export class ApksService implements OnModuleInit {
     await this.ensureUploadDir();
   }
 
-
   private async ensureUploadDir() {
     if (!existsSync(this.uploadDir)) {
       await mkdir(this.uploadDir, { recursive: true });
@@ -24,15 +23,15 @@ export class ApksService implements OnModuleInit {
 
   async create(file: Express.Multer.File, createApkDto: CreateApkDto) {
     await this.ensureUploadDir();
-    
+
     const filename = `${Date.now()}-${file.originalname}`;
     const filePath = join(this.uploadDir, filename);
-    
+
     await writeFile(filePath, file.buffer);
 
     const size = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
 
-    // Set all other APKs to inactive if this is a new one? 
+    // Set all other APKs to inactive if this is a new one?
     // Or just let the user manage it. Let's keep it simple for now.
 
     return this.prisma.apk.create({
@@ -61,7 +60,7 @@ export class ApksService implements OnModuleInit {
 
   async remove(id: string) {
     const apk = await this.findOne(id);
-    
+
     const filePath = join(this.uploadDir, apk.filename);
     if (existsSync(filePath)) {
       await unlink(filePath);
