@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { AuthService } from '@thallesp/nestjs-better-auth';
 import { pick } from 'lodash';
 import { BetterAuthWithPlugins, UserSession } from '../auth/auth.types';
@@ -23,9 +27,28 @@ export class ClientsService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
+    let chp = await this.prismaService.communityHealthProvider.findUnique({
       where: { userId: user.id },
     });
+
+    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
+    if (!chp && userRole?.toLowerCase() === 'admin') {
+      // If Admin creates client, assign to first available CHP to satisfy DB constraint
+      chp = await this.prismaService.communityHealthProvider.findFirst();
+    }
+
+    if (!chp) {
+      throw new NotFoundException('Community health provider not found');
+    }
+
+    const clientWithSimilarNo = await this.prismaService.client.findFirst({
+      where: { phoneNumber: createClientDto.phoneNumber },
+    });
+
+    if (clientWithSimilarNo) {
+      throw new BadRequestException('Client with similar phone number exist');
+    }
+
     const client = await this.prismaService.client.create({
       data: {
         firstName: createClientDto.firstName,
@@ -37,7 +60,7 @@ export class ClientsService {
         ward: createClientDto.ward,
         nationalId: createClientDto.nationalId,
         maritalStatus: createClientDto.maritalStatus,
-        createdById: chp!.id,
+        createdById: chp.id,
       },
     });
 
@@ -69,12 +92,16 @@ export class ClientsService {
           {
             phoneNumber: findClientDto.phoneNumber ?? undefined,
             nationalId: findClientDto.nationalId ?? undefined,
+            createdById: findClientDto.createdById ?? undefined,
             metadata: findClientDto.risk
               ? {
                   path: ['riskInterpretation'],
                   equals: findClientDto.risk,
                 }
               : undefined,
+            createdBy: {
+              userId: findClientDto.createdByUserId,
+            },
           },
           {
             OR: findClientDto.name
@@ -126,9 +153,14 @@ export class ClientsService {
           },
         ],
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: findClientDto.sortBy
+        ? {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+            [findClientDto.sortBy]: this.paginationService.getSortOrder(
+              findClientDto.sortOrder,
+            ),
+          }
+        : { createdAt: 'desc' },
       include: {
         screenings: {
           select: {

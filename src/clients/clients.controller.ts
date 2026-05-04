@@ -20,13 +20,14 @@ import {
 } from '../common/common.decorators';
 import { ApiOperation } from '@nestjs/swagger';
 import { RequireChp } from '../chps/chp.decorators';
+import { RequireSystemPermission } from '../auth/auth.decorators';
 
 @Controller('clients')
-@RequireChp()
 export class ClientsController {
-  constructor(private readonly clientsService: ClientsService) {}
+  constructor(private readonly clientsService: ClientsService) { }
 
   @Post()
+  @RequireChp()
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Create a new client' })
   create(
@@ -44,6 +45,9 @@ export class ClientsController {
   }
 
   @Get()
+  @RequireSystemPermission({
+    clients: ['list'],
+  })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get all clients' })
   findAll(
@@ -54,6 +58,9 @@ export class ClientsController {
   }
 
   @Get(':id')
+  @RequireSystemPermission({
+    clients: ['list'],
+  })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get a client by ID' })
   findOne(@Param('id') id: string) {
@@ -61,6 +68,9 @@ export class ClientsController {
   }
 
   @Put(':id')
+  @RequireSystemPermission({
+    clients: ['update'],
+  })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Update a client by ID' })
   update(
@@ -80,6 +90,9 @@ export class ClientsController {
   }
 
   @Delete(':id')
+  @RequireSystemPermission({
+    clients: ['delete'],
+  })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Delete a client by ID' })
   delete(

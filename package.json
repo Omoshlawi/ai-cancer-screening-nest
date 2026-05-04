@@ -13,6 +13,7 @@
     "db:seed:address-hierarchy": "ts-node scripts/seed-address-hierarchy.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
+    "start:kill": "kill -9 $(lsof -ti :3001) && nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",

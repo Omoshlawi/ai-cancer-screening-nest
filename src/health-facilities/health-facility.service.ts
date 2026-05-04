@@ -36,7 +36,7 @@ export class HealthFacilityService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
-  ) {}
+  ) { }
 
   create(createHealthFacilityDto: CreateHealthFacilityDto) {
     return this.prismaService.healthFacility.create({
@@ -81,50 +81,50 @@ export class HealthFacilityService {
           {
             OR: findHealthFacilityDto.search
               ? [
-                  {
-                    kmflCode: {
-                      contains: findHealthFacilityDto.search,
-                      mode: 'insensitive',
-                    },
+                {
+                  kmflCode: {
+                    contains: findHealthFacilityDto.search,
+                    mode: 'insensitive',
                   },
-                  {
-                    name: {
-                      contains: findHealthFacilityDto.search,
-                      mode: 'insensitive',
-                    },
+                },
+                {
+                  name: {
+                    contains: findHealthFacilityDto.search,
+                    mode: 'insensitive',
                   },
-                ]
+                },
+              ]
               : undefined,
           },
           {
             OR: findHealthFacilityDto.location
               ? [
-                  {
-                    county: {
-                      contains: findHealthFacilityDto.location,
-                      mode: 'insensitive',
-                    },
+                {
+                  county: {
+                    contains: findHealthFacilityDto.location,
+                    mode: 'insensitive',
                   },
-                  {
-                    subcounty: {
-                      contains: findHealthFacilityDto.location,
-                      mode: 'insensitive',
-                    },
+                },
+                {
+                  subcounty: {
+                    contains: findHealthFacilityDto.location,
+                    mode: 'insensitive',
                   },
-                  {
-                    ward: {
-                      contains: findHealthFacilityDto.location,
-                      mode: 'insensitive',
-                    },
+                },
+                {
+                  ward: {
+                    contains: findHealthFacilityDto.location,
+                    mode: 'insensitive',
                   },
-                ]
+                },
+              ]
               : undefined,
           },
         ],
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: findHealthFacilityDto.sortBy
+        ? { [findHealthFacilityDto.sortBy]: this.paginationService.getSortOrder(findHealthFacilityDto.sortOrder) }
+        : { createdAt: 'desc' },
       include: {
         referrals: true,
         type: true,
@@ -399,5 +399,52 @@ export class HealthFacilityService {
 
     // Return array of targetCount nearest facilities (or fewer if not enough exist within maxDistanceKm)
     return { results };
+  }
+  /**
+   * Get all unique counties from AddressHierarchy
+   */
+  async getCounties() {
+    const counties = await this.prismaService.addressHierarchy.findMany({
+      where: { level: 1, voided: false },
+      orderBy: { name: 'asc' },
+    });
+    // We return name as value because HealthFacility schema stores names as strings
+    return counties.map((c) => ({ label: c.name, value: c.name, id: c.id }));
+  }
+
+  /**
+   * Get subcounties for a specific county name
+   */
+  async getSubcounties(countyName: string) {
+    // First find the county ID
+    const county = await this.prismaService.addressHierarchy.findFirst({
+      where: { name: countyName, level: 1, voided: false },
+    });
+
+    if (!county) return [];
+
+    const subcounties = await this.prismaService.addressHierarchy.findMany({
+      where: { parentId: county.id, level: 2, voided: false },
+      orderBy: { name: 'asc' },
+    });
+    return subcounties.map((s) => ({ label: s.name, value: s.name, id: s.id }));
+  }
+
+  /**
+   * Get wards for a specific subcounty name
+   */
+  async getWards(subcountyName: string) {
+    // First find the subcounty ID
+    const subcounty = await this.prismaService.addressHierarchy.findFirst({
+      where: { name: subcountyName, level: 2, voided: false },
+    });
+
+    if (!subcounty) return [];
+
+    const wards = await this.prismaService.addressHierarchy.findMany({
+      where: { parentId: subcounty.id, level: 3, voided: false },
+      orderBy: { name: 'asc' },
+    });
+    return wards.map((w) => ({ label: w.name, value: w.name, id: w.id }));
   }
 }

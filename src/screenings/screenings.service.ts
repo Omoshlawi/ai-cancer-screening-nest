@@ -32,32 +32,113 @@ export class ScreeningsService {
     const chp = await this.prismaService.communityHealthProvider.findUnique({
       where: { userId: user.id },
     });
-    if (!chp) {
+
+    if (!chp && user.role !== 'admin') {
       throw new NotFoundException('Community health provider not found');
     }
+
     const dbQuery: FunctionFirstArgument<
       typeof this.prismaService.screening.findMany
     > = {
       where: {
-        clientId: findScreeningsDto.clientId,
-        providerId:
-          findScreeningsDto.includeForAllProviders === StringBoolean.TRUE
-            ? undefined
-            : (findScreeningsDto.providerId ?? chp.id),
-        createdAt: {
-          gte: findScreeningsDto.screeningDateFrom ?? undefined,
-          lte: findScreeningsDto.screeningDateTo ?? undefined,
-        },
-        scoringResult: findScreeningsDto.risk
-          ? {
-              path: ['interpretation'],
-              equals: findScreeningsDto.risk,
-            }
-          : undefined,
+        AND: [
+          {
+            clientId: findScreeningsDto.clientId,
+            providerId:
+              findScreeningsDto.includeForAllProviders === StringBoolean.TRUE ||
+              (!chp && user.role === 'admin')
+                ? (findScreeningsDto.providerId ?? undefined)
+                : (findScreeningsDto.providerId ?? chp?.id),
+            createdAt: {
+              gte: findScreeningsDto.screeningDateFrom ?? undefined,
+              lte: findScreeningsDto.screeningDateTo ?? undefined,
+            },
+            scoringResult: findScreeningsDto.risk
+              ? {
+                  path: ['interpretation'],
+                  equals: findScreeningsDto.risk,
+                }
+              : undefined,
+          },
+          // Search filter
+          findScreeningsDto.search
+            ? {
+                OR: [
+                  {
+                    client: {
+                      firstName: {
+                        contains: findScreeningsDto.search,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  {
+                    client: {
+                      lastName: {
+                        contains: findScreeningsDto.search,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  {
+                    provider: {
+                      firstName: {
+                        contains: findScreeningsDto.search,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  {
+                    provider: {
+                      lastName: {
+                        contains: findScreeningsDto.search,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                ],
+              }
+            : {},
+          // Location filters
+          findScreeningsDto.county
+            ? {
+                client: {
+                  county: {
+                    equals: findScreeningsDto.county,
+                    mode: 'insensitive',
+                  },
+                },
+              }
+            : {},
+          findScreeningsDto.subcounty
+            ? {
+                client: {
+                  subcounty: {
+                    equals: findScreeningsDto.subcounty,
+                    mode: 'insensitive',
+                  },
+                },
+              }
+            : {},
+          findScreeningsDto.ward
+            ? {
+                client: {
+                  ward: { equals: findScreeningsDto.ward, mode: 'insensitive' },
+                },
+              }
+            : {},
+        ] as any,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: findScreeningsDto.sortBy
+        ? {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            [findScreeningsDto.sortBy]: this.paginationService.getSortOrder(
+              findScreeningsDto.sortOrder,
+            ),
+          }
+        : {
+            createdAt: 'desc',
+          },
       include: {
         client: true,
         provider: true,

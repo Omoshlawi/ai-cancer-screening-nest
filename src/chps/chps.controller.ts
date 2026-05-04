@@ -8,7 +8,7 @@ import { RequireSystemPermission } from '../auth/auth.decorators';
 
 @Controller('chps')
 export class ChpsController {
-  constructor(private readonly chpsService: ChpsService) {}
+  constructor(private readonly chpsService: ChpsService) { }
   @Get()
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get all community health providers(CHPs)' })

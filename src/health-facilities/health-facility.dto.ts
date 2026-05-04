@@ -54,6 +54,14 @@ export class CreateHealthFacilityDto {
   @MinLength(3)
   name: string;
   @ApiProperty({
+    description: 'The address of the health facility',
+    example: 'Hospital Road, Nairobi, Kenya',
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(3)
+  address: string;
+  @ApiProperty({
     description: 'The owner of the health facility',
     example: 'Kenyatta National Hospital',
     required: false,
@@ -145,10 +153,20 @@ export class CreateHealthFacilityDto {
 
 export class UpdateHealthFacilityDto {
   @ApiProperty({
-    description: 'The name of the health facility',
-    example: 'Kenyatta National Hospital',
+    description: 'The mfl code of the health facility',
+    example: '1234',
+    required: false,
   })
   @IsOptional()
+  @IsString()
+  @MinLength(3)
+  kmflCode?: string;
+
+  @ApiProperty({
+    description: 'The name of the health facility',
+    example: 'Kenyatta National Hospital',
+    required: false,
+  })
   @IsString()
   @MinLength(3)
   name?: string;
@@ -156,17 +174,61 @@ export class UpdateHealthFacilityDto {
   @ApiProperty({
     description: 'The address of the health facility',
     example: 'Hospital Road, Nairobi, Kenya',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  address?: string;
+
+  @ApiProperty({
+    description: 'The owner of the health facility',
+    example: 'Kenyatta National Hospital',
+    required: false,
+  })
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(3)
+  owner?: string;
+
+  @ApiProperty({
+    description: 'The county of the health facility',
+    example: 'Kiambu',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  county?: string;
+
+  @ApiProperty({
+    description: 'The subcounty of the health facility',
+    example: 'Juja',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  subcounty?: string;
+
+  @ApiProperty({
+    description: 'The ward of the health facility',
+    example: 'Juja',
+    required: false,
   })
   @IsOptional()
   @IsString()
   @MinLength(5)
-  address?: string;
+  ward?: string;
 
   @ApiProperty({
     description: 'The phone number of the health facility',
     example: '+254712345678',
+    required: false,
   })
   @IsOptional()
+  @IsNotEmpty()
   @IsString()
   @Matches(PHONE_NUMBER_REGEX, {
     message: 'Phone number must be a valid Kenyan phone number',
@@ -176,8 +238,10 @@ export class UpdateHealthFacilityDto {
   @ApiProperty({
     description: 'The email of the health facility',
     example: 'info@knh.ac.ke',
+    required: false,
   })
   @IsOptional()
+  @IsNotEmpty()
   @IsString()
   @IsEmail()
   email?: string;
@@ -185,8 +249,10 @@ export class UpdateHealthFacilityDto {
   @ApiProperty({
     description: 'The logo URL of the health facility',
     example: 'https://example.com/logo.png',
+    required: false,
   })
   @IsOptional()
+  @IsNotEmpty()
   @IsString()
   @MinLength(3)
   logo?: string;
@@ -194,6 +260,7 @@ export class UpdateHealthFacilityDto {
   @ApiProperty({
     description: 'Geolocation coordinates',
     type: CoordinatesDto,
+    required: false,
   })
   @IsOptional()
   @ValidateNested()

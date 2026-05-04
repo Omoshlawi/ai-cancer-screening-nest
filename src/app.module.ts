@@ -24,6 +24,7 @@ import { ReferralModule } from './referrals/referral.module';
 import { ScreeningsModule } from './screenings/screenings.module';
 import { FollowUpModule } from './follow-up/follow-up.module';
 import { ApksModule } from './apks/apks.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { ApksModule } from './apks/apks.module';
     BotModule,
     FollowUpModule,
     ApksModule,
+    DashboardModule,
   ],
 
   controllers: [AppController],
@@ -62,4 +64,4 @@ import { ApksModule } from './apks/apks.module';
     { provide: APP_GUARD, useClass: RequireCHPGuard },
   ],
 })
-export class AppModule {}
+export class AppModule { }

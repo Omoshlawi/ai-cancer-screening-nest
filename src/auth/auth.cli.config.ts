@@ -36,6 +36,4 @@ export const auth: any = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-}) as any;
-
-
+});

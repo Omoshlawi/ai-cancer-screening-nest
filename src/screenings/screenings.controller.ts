@@ -24,12 +24,16 @@ import {
 } from '../common/common.decorators';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
+import { RequireSystemPermission } from '../auth/auth.decorators';
+
 @Controller('screenings')
-@RequireChp()
 export class ScreeningsController {
-  constructor(private readonly screeningsService: ScreeningsService) {}
+  constructor(private readonly screeningsService: ScreeningsService) { }
 
   @Get()
+  @RequireSystemPermission({
+    screenings: ['list'],
+  })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get all screenings' })
   @ApiOkResponse({ type: FindScreeningsResponseDto })
@@ -47,6 +51,7 @@ export class ScreeningsController {
   }
 
   @Post()
+  @RequireChp()
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Create a new screening' })
   @ApiOkResponse({ type: ScreeningDto })
@@ -66,6 +71,9 @@ export class ScreeningsController {
   }
 
   @Get(':id')
+  @RequireSystemPermission({
+    clients: ['list'],
+  })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get a screening by ID' })
   @ApiOkResponse({ type: ScreeningDto })

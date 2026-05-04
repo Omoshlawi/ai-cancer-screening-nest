@@ -27,6 +27,7 @@ import {
   UserAgent,
 } from '../common/common.decorators';
 import { UserSession } from '../auth/auth.types';
+import { RequireSystemPermission } from '../auth/auth.decorators';
 import {
   CreateOutreachActionDto,
   FindOutreachActionResponseDto,
@@ -36,14 +37,16 @@ import { FollowUpOutreachActionService } from './follow-up.outreach.service';
 import { PaginationDto } from '../common/commond.dto';
 
 @Controller('follow-up')
-@RequireChp()
 export class FollowUpController {
   constructor(
     private readonly followUpService: FollowUpService,
     private readonly outReachActionService: FollowUpOutreachActionService,
-  ) {}
+  ) { }
 
   @Get()
+  @RequireSystemPermission({
+    followups: ['list'],
+  })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Find all Followups' })
   @ApiOkResponse({ type: FindFollowUpResponseDto })
@@ -60,6 +63,7 @@ export class FollowUpController {
     );
   }
   @Get('pending')
+  @RequireChp()
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Find all pending Followups' })
   @ApiOkResponse({ type: FindFollowUpResponseDto })
@@ -73,6 +77,7 @@ export class FollowUpController {
   }
 
   @Post()
+  @RequireChp()
   @ApiOkResponse({ type: FollowUpResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Create Followup' })
@@ -99,6 +104,7 @@ export class FollowUpController {
   }
 
   @Put(':id')
+  @RequireChp()
   @ApiOkResponse({ type: FollowUpResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Update a follup by ID' })
@@ -131,6 +137,7 @@ export class FollowUpController {
     return this.followUpService.delete(id, session.user, ipAddress, userAgent);
   }
   @Post(':id/cancel')
+  @RequireChp()
   @ApiOkResponse({ type: FollowUpResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Cancel a follow-up by ID' })
@@ -150,6 +157,7 @@ export class FollowUpController {
     );
   }
   @Post(':id/outreach-action')
+  @RequireChp()
   @ApiOkResponse({ type: OutreachActionsResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Create outreach action' })

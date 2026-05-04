@@ -98,6 +98,23 @@ export class PaginationDto {
   @IsInt()
   @Min(0)
   limit?: number;
+
+  @ApiPropertyOptional({
+    description: 'Field to sort by',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  sortBy?: string;
+
+  @ApiPropertyOptional({
+    description: 'Sort order (asc or desc)',
+    required: false,
+    enum: ['asc', 'desc'],
+  })
+  @IsOptional()
+  @IsString()
+  sortOrder?: 'asc' | 'desc';
 }
 
 export class PaginationControlsDto implements PaginationControls {
