@@ -39,8 +39,9 @@ async function seedHealthFacilities(): Promise<void> {
     console.log('✅ Database connection established');
 
     const healthFacilitiesPath = path.join(process.cwd(), 'assets', 'mfl.json');
-    const healthFacilities: HealthFacilityData[] =
-      require(healthFacilitiesPath);
+    const healthFacilities: HealthFacilityData[] = require(
+      healthFacilitiesPath,
+    );
 
     // First, fetch all facility types and create a map by name for quick lookup
     const facilityTypes = await prisma.healthFacilityType.findMany();
