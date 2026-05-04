@@ -47,7 +47,8 @@ const chpRole = adminPluginAcl.newRole({
 
 export const adminPluginRoles = {
   ...adminDefaultRoles,
-  admin: adminRole,
-  user: userRole,
-  chp: chpRole,
+  admin: adminRole as any,
+  user: userRole as any,
+  chp: chpRole as any,
 };
+

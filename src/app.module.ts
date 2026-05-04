@@ -23,6 +23,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ReferralModule } from './referrals/referral.module';
 import { ScreeningsModule } from './screenings/screenings.module';
 import { FollowUpModule } from './follow-up/follow-up.module';
+import { ApksModule } from './apks/apks.module';
 
 @Module({
   imports: [
@@ -51,7 +52,9 @@ import { FollowUpModule } from './follow-up/follow-up.module';
     AddressHierarchyModule,
     BotModule,
     FollowUpModule,
+    ApksModule,
   ],
+
   controllers: [AppController],
   providers: [
     AppService,

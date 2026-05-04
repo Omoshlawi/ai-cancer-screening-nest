@@ -13,6 +13,10 @@ datasource db {
   provider = "postgresql"
 }
 
+
+
+
+
 model User {
   id                      String                   @id
   name                    String
@@ -457,3 +461,18 @@ enum CancelReason {
   INCORRECT_DATA // Screening was a mistake or duplicate entry
   HOSPITALIZED_OTHER // Patient is in the hospital for a different, unrelated issue
 }
+
+model Apk {
+  id        String   @id @default(cuid())
+  version   String
+  filename  String
+  url       String
+  size      String
+  notes     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("apks")
+}
+

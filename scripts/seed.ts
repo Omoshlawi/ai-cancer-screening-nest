@@ -10,7 +10,9 @@ const scripts = [
   'seed-address-hierarchy.ts',
   'seed-facility-types.ts',
   'seed-health-facilities.ts',
+  'seed-admin.ts',
 ];
+
 
 async function runScript(scriptName: string): Promise<void> {
   return new Promise((resolve, reject) => {

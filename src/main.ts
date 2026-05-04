@@ -9,8 +9,10 @@ import {
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AuthService } from '@thallesp/nestjs-better-auth';
-import { Request, Response } from 'express';
+import { json, urlencoded, Request, Response } from 'express';
+
 import { AppModule } from './app.module';
+
 import { BetterAuthWithPlugins } from './auth/auth.types';
 import { mergeBetterAuthSchema } from './common/common.utils';
 import { AppConfig } from './config/app.config';
@@ -19,7 +21,15 @@ import { merge } from 'lodash';
 async function bootstrap() {
   const logger = new Logger('Main');
   const app = await NestFactory.create(AppModule);
+  app.use(json({ limit: '300mb' }));
+  app.use(urlencoded({ limit: '300mb', extended: true }));
+  app.enableCors({
+
+    origin: true,
+    credentials: true,
+  });
   app.setGlobalPrefix('api');
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
