@@ -22,7 +22,6 @@ import {
 import { ActivitiesService } from '../activities/activities.service';
 import { ScoringResult } from '../screenings/scoring.dto';
 import { ReferralStatus } from '../../generated/prisma/enums';
-import dayjs from 'dayjs';
 import { AuthService } from '@thallesp/nestjs-better-auth';
 
 @Injectable()
@@ -40,23 +39,9 @@ export class ReferralService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const roles = [user.role ?? '']
-      .flat()
-      .flatMap((r) => r.split(','))
-      .map((r) => r.trim().toLowerCase());
-    const isAdmin = roles.includes('admin');
-
-    // Get the CHP for the current user (nullable for admins)
-    const chp = !isAdmin
-      ? await this.prismaService.communityHealthProvider.findUnique({
-          where: { userId: user.id },
-        })
-      : null;
-
-    if (!isAdmin && !chp) {
-      throw new ForbiddenException('User is not a Community Health Provider');
-    }
-
+    const chp = await this.prismaService.communityHealthProvider.findUnique({
+      where: { userId: user.id },
+    });
     // Verify the screening exists
     const screening = await this.prismaService.screening.findUnique({
       where: { id: createReferralDto.screeningId },
@@ -69,8 +54,7 @@ export class ReferralService {
       throw new NotFoundException('Screening not found');
     }
 
-    // Ownership check (skip for admins)
-    if (!isAdmin && screening.providerId !== chp?.id) {
+    if (screening.providerId !== chp?.id) {
       throw new ForbiddenException(
         'You can only create referrals for your own screenings',
       );
@@ -381,12 +365,13 @@ export class ReferralService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const roles = [user.role ?? '']
-      .flat()
-      .flatMap((r) => r.split(','))
-      .map((r) => r.trim().toLowerCase());
-    const isAdmin = roles.includes('admin');
-    const isHcw = roles.includes('hcw');
+    const { success: canViewAny } =
+      await this.authservice.api.userHasPermission({
+        body: {
+          userId: user.id,
+          permissions: { referrals: ['view-any'] },
+        },
+      });
 
     const existingReferral = await this.prismaService.referral.findUnique({
       where: { id },
@@ -397,8 +382,7 @@ export class ReferralService {
       throw new NotFoundException('Referral not found');
     }
 
-    // Ownership check (skip for admins and HCWs who can complete any referral)
-    if (!isAdmin && !isHcw) {
+    if (!canViewAny) {
       const chp = await this.prismaService.communityHealthProvider.findUnique({
         where: { userId: user.id },
       });
@@ -413,22 +397,12 @@ export class ReferralService {
       where: {
         id,
         status: { in: ['PENDING', 'VISITED_PENDING_RESULTS'] },
-        followUps: { some: { id: completeReferralDto.followUpId } },
       },
       data: {
         status: ReferralStatus.COMPLETED,
         testResult: completeReferralDto.testResult,
         visitedDate: completeReferralDto.visitedDate,
         finalDiagnosis: completeReferralDto.finalDiagnosis,
-        followUps: {
-          update: {
-            where: { id: completeReferralDto.followUpId },
-            data: {
-              completedAt: dayjs().toDate(),
-              outcomeNotes: completeReferralDto.outcomeNotes,
-            },
-          },
-        },
       },
       include: {
         screening: {
@@ -437,15 +411,9 @@ export class ReferralService {
           },
         },
         healthFacility: true,
-        followUps: true,
       },
     });
 
-    const completedFollowUp = completedReferral.followUps.find(
-      (fu) => fu.id === completeReferralDto.followUpId,
-    );
-
-    // Track referral completion activity
     const scoringResult = completedReferral.screening
       .scoringResult as unknown as ScoringResult;
     await this.activitiesService.trackActivity(
@@ -468,26 +436,6 @@ export class ReferralService {
       userAgent,
     );
 
-    // Track follow-up completion activity
-    await this.activitiesService.trackActivity(
-      user.id,
-      {
-        action: 'complete',
-        resource: 'followUp',
-        resourceId: completeReferralDto.followUpId,
-        metadata: {
-          clientId: completedReferral.screening.clientId,
-          clientName: `${completedReferral.screening.client.firstName} ${completedReferral.screening.client.lastName}`,
-          category: completedFollowUp?.category,
-          priority: completedFollowUp?.priority,
-          startDate: completedFollowUp?.startDate?.toISOString(),
-          dueDate: completedFollowUp?.dueDate?.toISOString(),
-        },
-      },
-      ipAddress,
-      userAgent,
-    );
-
     return completedReferral;
   }
 
@@ -497,11 +445,13 @@ export class ReferralService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const roles = [user.role ?? '']
-      .flat()
-      .flatMap((r) => r.split(','))
-      .map((r) => r.trim().toLowerCase());
-    const isAdmin = roles.includes('admin');
+    const { success: canViewAny } =
+      await this.authservice.api.userHasPermission({
+        body: {
+          userId: user.id,
+          permissions: { referrals: ['view-any'] },
+        },
+      });
 
     const existingReferral = await this.prismaService.referral.findUnique({
       where: { id },
@@ -516,8 +466,7 @@ export class ReferralService {
       throw new BadRequestException('Cannot cancel a completed referral');
     }
 
-    // Ownership check (skip for admins)
-    if (!isAdmin) {
+    if (!canViewAny) {
       const chp = await this.prismaService.communityHealthProvider.findUnique({
         where: { userId: user.id },
       });

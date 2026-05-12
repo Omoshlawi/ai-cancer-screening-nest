@@ -154,7 +154,7 @@ export class ReferralController {
   @Post(':id/cancel')
   @RequireChp()
   @RequireSystemPermission({
-    referrals: ['complete'],
+    referrals: ['cancel'],
   })
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()

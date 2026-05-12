@@ -296,16 +296,4 @@ export class CompleteReferralDto {
   })
   @IsOptional()
   finalDiagnosis?: string;
-  // For follow-up
-  @ApiProperty({
-    description: 'Id of followup completed by this referral',
-  })
-  @IsNotEmpty()
-  followUpId: string;
-  @ApiProperty({
-    description: 'Followup outcome notes',
-    required: false,
-  })
-  @IsOptional()
-  outcomeNotes?: string;
 }
