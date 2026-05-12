@@ -199,6 +199,7 @@ export class ClientsService {
             id: true,
             createdAt: true,
             scoringResult: true,
+            provider: true,
           },
           orderBy: {
             createdAt: 'desc',

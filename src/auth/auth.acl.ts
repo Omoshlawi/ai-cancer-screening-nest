@@ -55,11 +55,14 @@ const chpRole = adminPluginAcl.newRole({
   followups: ['create', 'list', 'update', 'delete'],
   ...userAc.statements,
 });
+const healthCareWorkerRole = adminPluginAcl.newRole({
+  ...chpRole.statements,
+});
 
 export const adminPluginRoles = {
   ...adminDefaultRoles,
-  admin: adminRole as any,
-  user: userRole as any,
-  chp: chpRole as any,
+  admin: adminRole,
+  user: userRole,
+  chp: chpRole,
+  hcw: healthCareWorkerRole,
 };
-

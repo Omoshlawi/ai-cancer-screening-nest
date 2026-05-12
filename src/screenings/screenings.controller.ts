@@ -28,7 +28,7 @@ import { RequireSystemPermission } from '../auth/auth.decorators';
 
 @Controller('screenings')
 export class ScreeningsController {
-  constructor(private readonly screeningsService: ScreeningsService) { }
+  constructor(private readonly screeningsService: ScreeningsService) {}
 
   @Get()
   @RequireSystemPermission({
