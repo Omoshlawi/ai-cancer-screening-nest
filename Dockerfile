@@ -7,7 +7,7 @@ RUN npm install -g pnpm && apk add --no-cache openssl
 WORKDIR /app
 
 # Copy manifest and pnpm-lock (this fixes your current error)
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install dependencies using pnpm
 RUN pnpm install --frozen-lockfile
