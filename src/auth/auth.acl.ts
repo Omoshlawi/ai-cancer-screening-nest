@@ -57,8 +57,8 @@ const chpRole = adminPluginAcl.newRole({
   ...userAc.statements,
 });
 const healthCareWorkerRole = adminPluginAcl.newRole({
-  ...userAc.statements,
-  referrals: ['complete'],
+  ...chpRole.statements,
+  referrals: [...chpRole.statements.referrals, 'complete'],
 });
 
 export const adminPluginRoles = {

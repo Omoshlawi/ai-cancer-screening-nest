@@ -38,8 +38,11 @@ export class ReferralService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
-    const isAdmin = userRole?.toLowerCase() === 'admin';
+    const roles = [user.role ?? '']
+      .flat()
+      .flatMap((r) => r.split(','))
+      .map((r) => r.trim().toLowerCase());
+    const isAdmin = roles.includes('admin');
 
     // Get the CHP for the current user (nullable for admins)
     const chp = !isAdmin
@@ -128,8 +131,13 @@ export class ReferralService {
     originalUrl: string,
     user: UserSession['user'],
   ) {
-    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
-    const isAdmin = userRole?.toLowerCase() === 'admin';
+    const roles = [user.role ?? '']
+      .flat()
+      .flatMap((r) => r.split(','))
+      .map((r) => r.trim().toLowerCase());
+    const isAdmin = roles.includes('admin');
+    const isHcw = roles.includes('hcw');
+    const isChp = roles.includes('chp');
 
     // Get the CHP for the current user
     const chp = !isAdmin
@@ -149,8 +157,10 @@ export class ReferralService {
         AND: [
           {
             screening: {
+              // HCW sees all referrals; CHP sees only their own
               providerId:
-                findReferralDto.providerId ?? (chp ? chp.id : undefined),
+                findReferralDto.providerId ??
+                (!isHcw && chp ? chp.id : undefined),
               clientId: findReferralDto.clientId ?? undefined,
             },
           },
@@ -237,8 +247,17 @@ export class ReferralService {
       this.prismaService.referral.count(pick(dbQuery, 'where')),
     ]);
 
+    const results = isChp
+      ? data.map((r) => ({
+          ...r,
+          testResult: null,
+          finalDiagnosis: null,
+          visitedDate: null,
+        }))
+      : data;
+
     return {
-      results: data,
+      results,
       ...this.paginationService.buildPaginationControls(
         totalCount,
         originalUrl,
@@ -248,8 +267,13 @@ export class ReferralService {
   }
 
   async findOne(id: string, user: UserSession['user']) {
-    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
-    const isAdmin = userRole?.toLowerCase() === 'admin';
+    const roles = [user.role ?? '']
+      .flat()
+      .flatMap((r) => r.split(','))
+      .map((r) => r.trim().toLowerCase());
+    const isAdmin = roles.includes('admin');
+    const isHcw = roles.includes('hcw');
+    const isChp = roles.includes('chp');
 
     // Get the CHP for the current user
     const chp = !isAdmin
@@ -288,11 +312,18 @@ export class ReferralService {
       throw new NotFoundException('Referral not found');
     }
 
-    // Verify ownership (skip for admins)
-    if (!isAdmin && referral.screening.providerId !== chp?.id) {
+    // Verify ownership (skip for admins and HCWs who can access all referrals)
+    if (!isAdmin && !isHcw && referral.screening.providerId !== chp?.id) {
       throw new ForbiddenException(
         'You can only access referrals for your own screenings',
       );
+    }
+
+    // CHP cannot see test results
+    if (isChp) {
+      referral.testResult = null;
+      referral.finalDiagnosis = null;
+      referral.visitedDate = null;
     }
 
     return referral;
@@ -383,8 +414,12 @@ export class ReferralService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
-    const isAdmin = userRole?.toLowerCase() === 'admin';
+    const roles = [user.role ?? '']
+      .flat()
+      .flatMap((r) => r.split(','))
+      .map((r) => r.trim().toLowerCase());
+    const isAdmin = roles.includes('admin');
+    const isHcw = roles.includes('hcw');
 
     const existingReferral = await this.prismaService.referral.findUnique({
       where: { id },
@@ -395,8 +430,8 @@ export class ReferralService {
       throw new NotFoundException('Referral not found');
     }
 
-    // Ownership check (skip for admins)
-    if (!isAdmin) {
+    // Ownership check (skip for admins and HCWs who can complete any referral)
+    if (!isAdmin && !isHcw) {
       const chp = await this.prismaService.communityHealthProvider.findUnique({
         where: { userId: user.id },
       });
@@ -495,8 +530,11 @@ export class ReferralService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
-    const isAdmin = userRole?.toLowerCase() === 'admin';
+    const roles = [user.role ?? '']
+      .flat()
+      .flatMap((r) => r.split(','))
+      .map((r) => r.trim().toLowerCase());
+    const isAdmin = roles.includes('admin');
 
     const existingReferral = await this.prismaService.referral.findUnique({
       where: { id },
