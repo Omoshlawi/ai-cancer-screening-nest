@@ -10,7 +10,7 @@ fi
 
 echo "🔁 Running Prisma migrations against: $DATABASE_URL"
 
-until pnpm exec prisma migrate deploy; do
+until npx prisma migrate deploy; do
   echo "⚠️ Prisma migrate deploy failed (database not ready yet?). Retrying in 5 seconds..."
   sleep 5
 done
