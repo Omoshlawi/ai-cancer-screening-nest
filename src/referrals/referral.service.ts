@@ -398,13 +398,16 @@ export class ReferralService {
     const completedReferral = await this.prismaService.referral.update({
       where: {
         id,
-        status: { in: ['PENDING', 'VISITED_PENDING_RESULTS'] },
+        status: { in: ['PENDING', 'VISITED_PENDING_RESULTS', 'COMPLETED'] },
       },
       data: {
         status: ReferralStatus.COMPLETED,
         visitedDate: completeReferralDto.visitedDate,
         finalDiagnosis: completeReferralDto.finalDiagnosis,
-        tests: { createMany: { data: completeReferralDto.tests } },
+        tests: {
+          deleteMany: {},
+          createMany: { data: completeReferralDto.tests },
+        },
       },
       include: {
         screening: {
