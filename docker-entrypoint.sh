@@ -10,8 +10,16 @@ fi
 
 echo "🔁 Running Prisma migrations against: $DATABASE_URL"
 
-until npx prisma migrate deploy; do
-  echo "⚠️ Prisma migrate deploy failed (database not ready yet?). Retrying in 5 seconds..."
+MAX_RETRIES=10
+RETRY_COUNT=0
+
+until node_modules/.bin/prisma migrate deploy; do
+  RETRY_COUNT=$((RETRY_COUNT + 1))
+  if [ "$RETRY_COUNT" -ge "$MAX_RETRIES" ]; then
+    echo "❌ Prisma migrate deploy failed after $MAX_RETRIES attempts. Exiting."
+    exit 1
+  fi
+  echo "⚠️ Prisma migrate deploy failed (attempt $RETRY_COUNT/$MAX_RETRIES). Retrying in 5 seconds..."
   sleep 5
 done
 
@@ -19,10 +27,10 @@ echo "✅ Prisma migrations applied successfully"
 
 echo "🌱 Running seed scripts..."
 # Run compiled JavaScript seed scripts to avoid ts-node/ESM issues in production
-if node dist/scripts/seed-address-hierarchy.js \
-  && node dist/scripts/seed-admin-user.js \
-  && node dist/scripts/seed-facility-types.js \
-  && node dist/scripts/seed-health-facilities.js; then
+if npx ts-node  scripts/seed-address-hierarchy.ts \
+  && npx ts-node scripts/seed-admin-user.ts \
+  && npx ts-node scripts/seed-facility-types.ts \
+  && npx ts-node scripts/seed-health-facilities.ts; then
   echo "✅ Seed scripts completed successfully"
 else
   echo "⚠️ Seed scripts failed. Continuing to start the app..."

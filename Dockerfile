@@ -1,32 +1,33 @@
+# --- STAGE 1: Build ---
 FROM node:22-alpine AS base
+
+# Install pnpm and openssl (required for Prisma)
+RUN npm install -g pnpm && apk add --no-cache openssl
 
 WORKDIR /app
 
-# Install OS dependencies (if needed later) and ensure openssl is present for Prisma
-RUN apk add --no-cache openssl
+# Copy manifest and pnpm-lock (this fixes your current error)
+COPY package.json pnpm-lock.yaml ./
 
-# Dummy DATABASE_URL so prisma.config.ts can resolve it during build
-ENV DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
-
-# Install dependencies separately for better caching
-COPY package.json package-lock.json ./
-
-RUN npm ci
+# Install dependencies using pnpm
+RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY . .
 
-# Generate Prisma client and build the NestJS app
-# Use tsc directly to avoid file watcher issues in Nest CLI
-RUN npx prisma generate && npx tsc -p tsconfig.build.json
+# Generate Prisma client first, then build
+# (The placeholder URL is fine here as it's only for the binary generation)
+ENV DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
+RUN pnpm db generate && pnpm run build
 
-# Runtime stage (can be the same image to keep things simple)
+
+# --- STAGE 2: Runtime ---
 FROM node:22-alpine
 
+# Install openssl in the runtime image too
+RUN apk add --no-cache openssl
 
 WORKDIR /app
-
-RUN apk add --no-cache openssl
 
 # Copy node_modules and built app from build stage
 COPY --from=base /app/node_modules ./node_modules
@@ -34,16 +35,21 @@ COPY --from=base /app/dist ./dist
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/scripts ./scripts
 COPY --from=base /app/assets ./assets
+COPY --from=base /app/generated ./generated
 COPY --from=base /app/package.json ./package.json
+COPY --from=base /app/tsconfig.json ./tsconfig.json
 COPY --from=base /app/prisma.config.ts ./prisma.config.ts
+COPY --from=base /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
-# Copy entrypoint script
-COPY docker-entrypoint.sh ./docker-entrypoint.sh
+# Ensure entrypoint is executable
 RUN chmod +x ./docker-entrypoint.sh
 
 ENV NODE_ENV=production
 
 EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget -qO- http://localhost:2000/api || exit 1
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 

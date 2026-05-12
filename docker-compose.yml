@@ -1,35 +1,59 @@
-version: '3.9'
-
 services:
   db:
+    container_name: screen_it_db
     image: bitnami/postgresql:latest
     restart: unless-stopped
-    environment:
-      - POSTGRESQL_USERNAME=app_user
-      - POSTGRESQL_PASSWORD=app_password
-      - POSTGRESQL_DATABASE=ai_cancer_db
+    env_file:
+      - .env
     ports:
       - '5432:5432'
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - db_data:/bitnami/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   app:
+    container_name: screen_it_app
     build: .
     restart: unless-stopped
     depends_on:
-      - db
+      - db:
+        condition: service_healthy
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgresql://app_user:app_password@db:5432/ai_cancer_db
-      - PORT=8080
-      - BETTER_AUTH_SECRET=chnage-me
-      - BETTER_AUTH_URL=http://localhost:8080
-      - ADMIN_USERNAME=admin
-      - ADMIN_EMAIL=admin@screenit.app
-      - ADMIN_PASSWORD=Admin123
-      - BOT_BASE_URL=http://localhost:8000
+      # App Config
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      # Database Config
+      - DATABASE_URL=${DATABASE_URL}
+      # Better Auth Config
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL}
+      # Admin user and seed config
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - SKIP_ADMIN_IF_EXISTS=${SKIP_ADMIN_IF_EXISTS}
+      # Bot url
+      - BOT_BASE_URL=${BOT_BASE_URL}
 
     ports:
       - '8080:8080'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:2000/api || exit 1']
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
 volumes:
   db_data:
