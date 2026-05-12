@@ -41,7 +41,7 @@ export class FollowUpController {
   constructor(
     private readonly followUpService: FollowUpService,
     private readonly outReachActionService: FollowUpOutreachActionService,
-  ) { }
+  ) {}
 
   @Get()
   @RequireSystemPermission({
@@ -78,6 +78,7 @@ export class FollowUpController {
 
   @Post()
   @RequireChp()
+  @RequireSystemPermission({ followups: ['create'] })
   @ApiOkResponse({ type: FollowUpResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Create Followup' })
@@ -96,6 +97,7 @@ export class FollowUpController {
   }
 
   @Get(':id')
+  @RequireSystemPermission({ followups: ['list'] })
   @ApiOkResponse({ type: FollowUpResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get a follow-up by ID' })
@@ -105,6 +107,7 @@ export class FollowUpController {
 
   @Put(':id')
   @RequireChp()
+  @RequireSystemPermission({ followups: ['update'] })
   @ApiOkResponse({ type: FollowUpResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Update a follup by ID' })
@@ -125,6 +128,7 @@ export class FollowUpController {
   }
 
   @Delete(':id')
+  @RequireSystemPermission({ followups: ['delete'] })
   @ApiOkResponse({ type: FollowUpResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Delete a follow-up by ID' })
@@ -138,6 +142,7 @@ export class FollowUpController {
   }
   @Post(':id/cancel')
   @RequireChp()
+  @RequireSystemPermission({ followups: ['update'] })
   @ApiOkResponse({ type: FollowUpResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Cancel a follow-up by ID' })
@@ -158,6 +163,7 @@ export class FollowUpController {
   }
   @Post(':id/outreach-action')
   @RequireChp()
+  @RequireSystemPermission({ followups: ['update'] })
   @ApiOkResponse({ type: OutreachActionsResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Create outreach action' })
@@ -177,6 +183,7 @@ export class FollowUpController {
     );
   }
   @Get(':id/outreach-action')
+  @RequireSystemPermission({ followups: ['list'] })
   @ApiOkResponse({ type: FindOutreachActionResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Get outreach action' })

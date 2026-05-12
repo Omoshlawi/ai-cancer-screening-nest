@@ -11,7 +11,7 @@ export const adminPluginAcl = createAccessControl({
   chp: ['create', 'list', 'update', 'delete'],
   clients: ['create', 'list', 'update', 'delete'],
   screenings: ['create', 'list', 'update', 'delete'],
-  referrals: ['create', 'list', 'update', 'delete'],
+  referrals: ['create', 'list', 'update', 'delete', 'complete', 'cancel'],
   faq: ['create', 'update', 'delete'],
   faqTopic: ['create', 'update', 'delete'],
   healthFacility: ['create', 'update', 'delete'],
@@ -47,16 +47,18 @@ const chpRole = adminPluginAcl.newRole({
   chp: ['list'],
   clients: ['create', 'list', 'update', 'delete'],
   screenings: ['create', 'list', 'update', 'delete'],
-  referrals: ['create', 'list', 'update', 'delete'],
+  referrals: ['create', 'list', 'update', 'delete', 'cancel'],
   faq: [],
   faqTopic: [],
   healthFacility: [],
   healthFacilityType: [],
   followups: ['create', 'list', 'update', 'delete'],
+
   ...userAc.statements,
 });
 const healthCareWorkerRole = adminPluginAcl.newRole({
-  ...chpRole.statements,
+  ...userAc.statements,
+  referrals: ['complete'],
 });
 
 export const adminPluginRoles = {

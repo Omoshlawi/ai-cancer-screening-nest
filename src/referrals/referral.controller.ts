@@ -33,10 +33,13 @@ import { RequireSystemPermission } from '../auth/auth.decorators';
 
 @Controller('referrals')
 export class ReferralController {
-  constructor(private readonly referralService: ReferralService) { }
+  constructor(private readonly referralService: ReferralService) {}
 
   @Post()
   @RequireChp()
+  @RequireSystemPermission({
+    referrals: ['create'],
+  })
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Create a new referral' })
@@ -86,6 +89,9 @@ export class ReferralController {
 
   @Put(':id')
   @RequireChp()
+  @RequireSystemPermission({
+    referrals: ['update'],
+  })
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse({ badRequest: true })
   @ApiOperation({ summary: 'Update a referral by ID' })
@@ -123,6 +129,9 @@ export class ReferralController {
 
   @Post(':id/complete')
   @RequireChp()
+  @RequireSystemPermission({
+    referrals: ['complete'],
+  })
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Complete Referral' })
@@ -144,6 +153,9 @@ export class ReferralController {
 
   @Post(':id/cancel')
   @RequireChp()
+  @RequireSystemPermission({
+    referrals: ['complete'],
+  })
   @ApiOkResponse({ type: ReferralResponseDto })
   @ApiErrorsResponse()
   @ApiOperation({ summary: 'Cancel a referral' })

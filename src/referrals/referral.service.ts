@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {
@@ -270,7 +272,7 @@ export class ReferralService {
           },
         },
         healthFacility: true,
-        followUp: {
+        followUps: {
           include: {
             outreachActions: {
               orderBy: {
@@ -409,14 +411,14 @@ export class ReferralService {
       where: {
         id,
         status: { in: ['PENDING', 'VISITED_PENDING_RESULTS'] },
-        followUp: { id: completeReferralDto.followUpId },
+        followUps: { some: { id: completeReferralDto.followUpId } },
       },
       data: {
         status: ReferralStatus.COMPLETED,
         testResult: completeReferralDto.testResult,
         visitedDate: completeReferralDto.visitedDate,
         finalDiagnosis: completeReferralDto.finalDiagnosis,
-        followUp: {
+        followUps: {
           update: {
             where: { id: completeReferralDto.followUpId },
             data: {
@@ -433,9 +435,13 @@ export class ReferralService {
           },
         },
         healthFacility: true,
-        followUp: true,
+        followUps: true,
       },
     });
+
+    const completedFollowUp = completedReferral.followUps.find(
+      (fu) => fu.id === completeReferralDto.followUpId,
+    );
 
     // Track referral completion activity
     const scoringResult = completedReferral.screening
@@ -470,10 +476,10 @@ export class ReferralService {
         metadata: {
           clientId: completedReferral.screening.clientId,
           clientName: `${completedReferral.screening.client.firstName} ${completedReferral.screening.client.lastName}`,
-          category: completedReferral.followUp?.category,
-          priority: completedReferral.followUp?.priority,
-          startDate: completedReferral.followUp?.startDate?.toISOString(),
-          dueDate: completedReferral.followUp?.dueDate?.toISOString(),
+          category: completedFollowUp?.category,
+          priority: completedFollowUp?.priority,
+          startDate: completedFollowUp?.startDate?.toISOString(),
+          dueDate: completedFollowUp?.dueDate?.toISOString(),
         },
       },
       ipAddress,

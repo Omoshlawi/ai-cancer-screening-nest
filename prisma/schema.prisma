@@ -272,7 +272,7 @@ model Referral {
   finalDiagnosis   String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-  followUp         FollowUp?
+  followUps        FollowUp[]
   healthFacility   HealthFacility @relation(fields: [healthFacilityId], references: [id], onDelete: Cascade)
   screening        Screening      @relation(fields: [screeningId], references: [id], onDelete: Cascade)
 
@@ -283,7 +283,7 @@ model FollowUp {
   id                   String                  @id @default(cuid())
   clientId             String
   providerId           String
-  referralId           String?                 @unique
+  referralId           String?
   triggerScreeningId   String
   category             FollowUpCategory
   priority             Priority                @default(MEDIUM)

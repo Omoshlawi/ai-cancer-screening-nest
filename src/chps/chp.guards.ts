@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   CanActivate,
   ExecutionContext,
@@ -19,7 +22,7 @@ export class RequireCHPGuard implements CanActivate {
     private readonly authService: AuthService<BetterAuthWithPlugins>,
     private reflector: Reflector,
     private prismaService: PrismaService,
-  ) { }
+  ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Check for decorator on handler (method) first, then on class
     const requireChp =
@@ -49,7 +52,9 @@ export class RequireCHPGuard implements CanActivate {
       where: { userId: session.user.id },
     });
 
-    const userRole = Array.isArray(session.user.role) ? session.user.role[0] : session.user.role;
+    const userRole = Array.isArray(session.user.role)
+      ? session.user.role[0]
+      : session.user.role;
     if (userRole?.toLowerCase() === 'admin') {
       return true;
     }
