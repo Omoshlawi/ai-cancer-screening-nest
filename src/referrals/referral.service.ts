@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
+
 import {
   BadRequestException,
   ForbiddenException,
@@ -9,7 +9,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { pick } from 'lodash';
-import { UserSession } from '../auth/auth.types';
+import { BetterAuthWithPlugins, UserSession } from '../auth/auth.types';
 import { FunctionFirstArgument } from '../common/common.types';
 import { PaginationService } from '../common/pagination.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -23,6 +23,7 @@ import { ActivitiesService } from '../activities/activities.service';
 import { ScoringResult } from '../screenings/scoring.dto';
 import { ReferralStatus } from '../../generated/prisma/enums';
 import dayjs from 'dayjs';
+import { AuthService } from '@thallesp/nestjs-better-auth';
 
 @Injectable()
 export class ReferralService {
@@ -30,6 +31,7 @@ export class ReferralService {
     private readonly prismaService: PrismaService,
     private readonly paginationService: PaginationService,
     private readonly activitiesService: ActivitiesService,
+    private readonly authservice: AuthService<BetterAuthWithPlugins>,
   ) {}
 
   async create(
@@ -131,25 +133,19 @@ export class ReferralService {
     originalUrl: string,
     user: UserSession['user'],
   ) {
-    const roles = [user.role ?? '']
-      .flat()
-      .flatMap((r) => r.split(','))
-      .map((r) => r.trim().toLowerCase());
-    const isAdmin = roles.includes('admin');
-    const isHcw = roles.includes('hcw');
-    const isChp = roles.includes('chp');
-
-    // Get the CHP for the current user
-    const chp = !isAdmin
-      ? await this.prismaService.communityHealthProvider.findUnique({
-          where: { userId: user.id },
-        })
-      : null;
-
-    if (!chp && !isAdmin) {
-      throw new ForbiddenException('User is not a Community Health Provider');
-    }
-
+    const { success: canViewAny } =
+      await this.authservice.api.userHasPermission({
+        body: {
+          userId: user.id,
+          permissions: {
+            referrals: ['view-any'],
+          },
+        },
+      });
+    const provider =
+      await this.prismaService.communityHealthProvider.findUnique({
+        where: { userId: user.id },
+      });
     const dbQuery: FunctionFirstArgument<
       typeof this.prismaService.referral.findMany
     > = {
@@ -158,9 +154,9 @@ export class ReferralService {
           {
             screening: {
               // HCW sees all referrals; CHP sees only their own
-              providerId:
-                findReferralDto.providerId ??
-                (!isHcw && chp ? chp.id : undefined),
+              providerId: canViewAny
+                ? findReferralDto.providerId
+                : provider?.id,
               clientId: findReferralDto.clientId ?? undefined,
             },
           },
@@ -225,7 +221,6 @@ export class ReferralService {
       },
       orderBy: findReferralDto.sortBy
         ? {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             [findReferralDto.sortBy]: this.paginationService.getSortOrder(
               findReferralDto.sortOrder,
             ),
@@ -247,17 +242,8 @@ export class ReferralService {
       this.prismaService.referral.count(pick(dbQuery, 'where')),
     ]);
 
-    const results = isChp
-      ? data.map((r) => ({
-          ...r,
-          testResult: null,
-          finalDiagnosis: null,
-          visitedDate: null,
-        }))
-      : data;
-
     return {
-      results,
+      results: data,
       ...this.paginationService.buildPaginationControls(
         totalCount,
         originalUrl,
@@ -267,27 +253,22 @@ export class ReferralService {
   }
 
   async findOne(id: string, user: UserSession['user']) {
-    const roles = [user.role ?? '']
-      .flat()
-      .flatMap((r) => r.split(','))
-      .map((r) => r.trim().toLowerCase());
-    const isAdmin = roles.includes('admin');
-    const isHcw = roles.includes('hcw');
-    const isChp = roles.includes('chp');
-
     // Get the CHP for the current user
-    const chp = !isAdmin
-      ? await this.prismaService.communityHealthProvider.findUnique({
-          where: { userId: user.id },
-        })
-      : null;
-
-    if (!chp && !isAdmin) {
-      throw new ForbiddenException('User is not a Community Health Provider');
-    }
+    const { success: canViewAny } =
+      await this.authservice.api.userHasPermission({
+        body: {
+          userId: user.id,
+          permissions: {
+            referrals: ['view-any'],
+          },
+        },
+      });
 
     const referral = await this.prismaService.referral.findUnique({
-      where: { id },
+      where: {
+        id,
+        screening: { provider: canViewAny ? undefined : { userId: user.id } },
+      },
       include: {
         screening: {
           include: {
@@ -310,20 +291,6 @@ export class ReferralService {
 
     if (!referral) {
       throw new NotFoundException('Referral not found');
-    }
-
-    // Verify ownership (skip for admins and HCWs who can access all referrals)
-    if (!isAdmin && !isHcw && referral.screening.providerId !== chp?.id) {
-      throw new ForbiddenException(
-        'You can only access referrals for your own screenings',
-      );
-    }
-
-    // CHP cannot see test results
-    if (isChp) {
-      referral.testResult = null;
-      referral.finalDiagnosis = null;
-      referral.visitedDate = null;
     }
 
     return referral;

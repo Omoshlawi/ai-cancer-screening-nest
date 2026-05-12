@@ -11,7 +11,15 @@ export const adminPluginAcl = createAccessControl({
   chp: ['create', 'list', 'update', 'delete'],
   clients: ['create', 'list', 'update', 'delete'],
   screenings: ['create', 'list', 'update', 'delete'],
-  referrals: ['create', 'list', 'update', 'delete', 'complete', 'cancel'],
+  referrals: [
+    'create',
+    'list',
+    'view-any',
+    'update',
+    'delete',
+    'complete',
+    'cancel',
+  ],
   faq: ['create', 'update', 'delete'],
   faqTopic: ['create', 'update', 'delete'],
   healthFacility: ['create', 'update', 'delete'],
@@ -24,7 +32,7 @@ const adminRole = adminPluginAcl.newRole({
   chp: ['create', 'delete', 'list', 'update'],
   clients: ['create', 'list', 'update', 'delete'],
   screenings: ['create', 'list', 'delete'],
-  referrals: ['list', 'delete'],
+  referrals: ['list', 'view-any', 'delete'],
   dashboard: ['view'],
   faq: ['create', 'delete', 'update'],
   faqTopic: ['create', 'delete', 'update'],
@@ -58,7 +66,7 @@ const chpRole = adminPluginAcl.newRole({
 });
 const healthCareWorkerRole = adminPluginAcl.newRole({
   ...chpRole.statements,
-  referrals: [...chpRole.statements.referrals, 'complete'],
+  referrals: [...chpRole.statements.referrals, 'complete', 'view-any'],
 });
 
 export const adminPluginRoles = {
