@@ -36,6 +36,7 @@ COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/scripts ./scripts
 COPY --from=base /app/assets ./assets
 COPY --from=base /app/generated ./generated
+COPY --from=base /app/src ./src
 COPY --from=base /app/package.json ./package.json
 COPY --from=base /app/tsconfig.json ./tsconfig.json
 COPY --from=base /app/prisma.config.ts ./prisma.config.ts
