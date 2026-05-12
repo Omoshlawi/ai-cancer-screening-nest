@@ -1,17 +1,22 @@
 import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayMinSize,
+  IsArray,
   IsDate,
   IsDateString,
   IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import {
+  ActionTaken,
   Referral,
   ReferralStatus,
   TestOutcome,
+  TestType,
 } from '../../generated/prisma/client';
 import { PaginationControlsDto, PaginationDto } from '../common/commond.dto';
 
@@ -163,7 +168,17 @@ export class HealthFacilityItemResponseDto {
   email: string;
 }
 
-export class ReferralResponseDto implements Referral {
+export class ReferralTestResponseDto {
+  @ApiProperty() id: string;
+  @ApiProperty() referralId: string;
+  @ApiProperty({ enum: TestType }) testType: TestType;
+  @ApiProperty({ enum: TestOutcome }) testResult: TestOutcome;
+  @ApiProperty({ enum: ActionTaken, required: false }) actionTaken?: ActionTaken | null;
+  @ApiProperty() createdAt: Date;
+  @ApiProperty() updatedAt: Date;
+}
+
+export class ReferralResponseDto {
   @ApiProperty({
     description: 'Status of the referral',
     enum: ReferralStatus,
@@ -197,13 +212,11 @@ export class ReferralResponseDto implements Referral {
   visitedDate: Date | null;
 
   @ApiProperty({
-    description: 'Result of the test performed at the health facility, if any',
-    enum: TestOutcome,
-    example: TestOutcome.POSITIVE,
+    description: 'Tests performed during the referral visit',
+    type: [ReferralTestResponseDto],
     required: false,
-    nullable: true,
   })
-  testResult: TestOutcome | null;
+  tests?: ReferralTestResponseDto[];
 
   @ApiProperty({
     description: 'Final diagnosis given at the health facility, if provided',
@@ -277,6 +290,25 @@ export class FindReferralResponseDto extends PaginationControlsDto {
   results: ReferralResponseDto[];
 }
 
+export class CreateReferralTestDto {
+  @ApiProperty({ enum: TestType, description: 'Type of test performed' })
+  @IsEnum(TestType)
+  testType: TestType;
+
+  @ApiProperty({ enum: TestOutcome, description: 'Result of the test' })
+  @IsEnum(TestOutcome)
+  testResult: TestOutcome;
+
+  @ApiProperty({
+    enum: ActionTaken,
+    description: 'Action taken based on the test result',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(ActionTaken)
+  actionTaken?: ActionTaken;
+}
+
 export class CompleteReferralDto {
   @ApiProperty({
     description:
@@ -286,14 +318,22 @@ export class CompleteReferralDto {
   @IsDate()
   @Type(() => Date)
   visitedDate: Date;
-  @ApiProperty({ enum: TestOutcome, description: 'Results of the actual test' })
-  @IsEnum(TestOutcome)
-  testResult: TestOutcome;
+
   @ApiProperty({
-    description: "Positive/Negative result isn't enough for a medical record",
-    examples: ['False Positive', 'Confirmed Stage 1'],
+    type: [CreateReferralTestDto],
+    description: 'Tests performed during the visit (at least one required)',
+  })
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => CreateReferralTestDto)
+  tests: CreateReferralTestDto[];
+
+  @ApiProperty({
+    description: "Additional diagnosis notes",
     required: false,
   })
   @IsOptional()
+  @IsString()
   finalDiagnosis?: string;
 }

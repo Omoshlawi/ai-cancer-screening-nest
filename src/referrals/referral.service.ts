@@ -217,6 +217,7 @@ export class ReferralService {
           },
         },
         healthFacility: true,
+        tests: true,
       },
       ...this.paginationService.buildPaginationQuery(findReferralDto),
     };
@@ -261,6 +262,7 @@ export class ReferralService {
           },
         },
         healthFacility: true,
+        tests: true,
         followUps: {
           include: {
             outreachActions: {
@@ -400,9 +402,9 @@ export class ReferralService {
       },
       data: {
         status: ReferralStatus.COMPLETED,
-        testResult: completeReferralDto.testResult,
         visitedDate: completeReferralDto.visitedDate,
         finalDiagnosis: completeReferralDto.finalDiagnosis,
+        tests: { createMany: { data: completeReferralDto.tests } },
       },
       include: {
         screening: {
@@ -411,6 +413,7 @@ export class ReferralService {
           },
         },
         healthFacility: true,
+        tests: true,
       },
     });
 
