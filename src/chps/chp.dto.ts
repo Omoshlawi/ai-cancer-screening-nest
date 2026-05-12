@@ -5,6 +5,7 @@ import {
   IsDate,
   Matches,
   IsOptional,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PHONE_NUMBER_REGEX } from '../common/common.contants';
@@ -12,6 +13,11 @@ import { PaginationDto } from '../common/commond.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
 // Kenyan phone number regex: matches numbers in form +2547XXXXXXXX or 07XXXXXXXX
+
+export enum ProviderRole {
+  CHP = 'chp',
+  HCW = 'hcw',
+}
 
 export enum MaritalStatus {
   SINGLE = 'single',
@@ -90,6 +96,14 @@ export class CreateChpDto {
   @IsString()
   @MinLength(8)
   password: string;
+
+  @ApiProperty({
+    description: 'The role of the health provider',
+    enum: ProviderRole,
+    example: ProviderRole.CHP,
+  })
+  @IsEnum(ProviderRole)
+  role: ProviderRole;
 }
 
 export class FindChpDto extends PaginationDto {

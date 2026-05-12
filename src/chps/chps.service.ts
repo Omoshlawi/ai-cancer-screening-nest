@@ -31,7 +31,7 @@ export class ChpsService {
         email: createChpDto.email,
         password: createChpDto.password,
         name: createChpDto.firstName + ' ' + createChpDto.lastName,
-        role: 'chp',
+        role: createChpDto.role,
       },
     });
 

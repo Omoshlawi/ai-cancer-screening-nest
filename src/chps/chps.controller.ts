@@ -11,7 +11,7 @@ export class ChpsController {
   constructor(private readonly chpsService: ChpsService) { }
   @Get()
   @ApiErrorsResponse()
-  @ApiOperation({ summary: 'Get all community health providers(CHPs)' })
+  @ApiOperation({ summary: 'Get all health providers (CHP/HCW)' })
   @OptionalAuth()
   findAll(@Query() findChpDto: FindChpDto, @OriginalUrl() originalUrl: string) {
     return this.chpsService.findAll(findChpDto, originalUrl);
@@ -19,7 +19,7 @@ export class ChpsController {
 
   @Post()
   @ApiErrorsResponse({ badRequest: true })
-  @ApiOperation({ summary: 'Create a new community health provider(CHP)' })
+  @ApiOperation({ summary: 'Create a new health provider (CHP or HCW)' })
   @RequireSystemPermission({
     chp: ['create'],
   })
