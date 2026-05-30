@@ -27,6 +27,7 @@ export const adminPluginAcl = createAccessControl({
   dashboard: ['view'],
   followups: ['create', 'list', 'update', 'delete'],
   providerFacility: ['create', 'list', 'delete'],
+  data: ['export'],
 });
 
 const adminRole = adminPluginAcl.newRole({
@@ -41,6 +42,7 @@ const adminRole = adminPluginAcl.newRole({
   healthFacilityType: ['create', 'delete', 'update'],
   followups: ['list', 'delete'],
   providerFacility: ['create', 'list', 'delete'],
+  data: ['export'],
   ...adminAc.statements,
 });
 

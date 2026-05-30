@@ -12,7 +12,11 @@ export class PaginationService {
     return (page - 1) * limit;
   }
 
-  buildPaginationQuery(query: Record<string, any> = {}) {
+  buildPaginationQuery(query: Record<string, any> = {}): {
+    skip?: number;
+    take?: number;
+  } {
+    if (query.exportAll === true) return {};
     const limit = this.parseLimit(query.limit);
     const page = this.parsePage(query.page);
     return {
@@ -33,6 +37,16 @@ export class PaginationService {
     query: Record<string, any> = {},
   ): PaginationControls {
     this.validateTotalCount(totalCount);
+    if (query.exportAll === true) {
+      return {
+        next: null,
+        prev: null,
+        currentPage: 1,
+        pageSize: totalCount,
+        totalPages: 1,
+        totalCount,
+      };
+    }
     const limit = this.parseLimit(query.limit);
     const page = this.parsePage(query.page);
     const totalPages = Math.ceil(totalCount / limit);

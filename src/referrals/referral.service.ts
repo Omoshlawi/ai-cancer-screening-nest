@@ -554,7 +554,7 @@ export class ReferralService {
   async findPendingForMyFacilities(
     user: UserSession['user'],
     originalUrl: string,
-    dto: { page?: number; limit?: number } = {},
+    dto: { page?: number; limit?: number; exportAll?: boolean } = {},
   ) {
     const provider = await this.prismaService.healthProvider.findUnique({
       where: { userId: user.id },

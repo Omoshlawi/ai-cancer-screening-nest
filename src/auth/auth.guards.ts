@@ -13,6 +13,31 @@ import { RequireSystemPermission } from './auth.decorators';
 import { BetterAuthWithPlugins } from './auth.types';
 
 @Injectable()
+export class ExportGuard implements CanActivate {
+  private logger = new Logger(ExportGuard.name);
+  constructor(
+    private readonly authService: AuthService<BetterAuthWithPlugins>,
+  ) {}
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<Request>();
+    const exportAll = (request.query as Record<string, string>).exportAll;
+    if (!exportAll || exportAll === 'false') return true;
+
+    const { success } = await this.authService.api.userHasPermission({
+      headers: fromNodeHeaders(request.headers),
+      body: { permissions: { data: ['export'] } },
+    });
+    if (!success) {
+      this.logger.warn(
+        'Export attempt denied — missing data.export permission',
+      );
+      throw new ForbiddenException('You do not have permission to export data');
+    }
+    return true;
+  }
+}
+
+@Injectable()
 export class RequireSystemPermissionsGuard implements CanActivate {
   private logger = new Logger(RequireSystemPermissionsGuard.name);
   constructor(
@@ -31,9 +56,8 @@ export class RequireSystemPermissionsGuard implements CanActivate {
     const { success } = await this.authService.api.userHasPermission({
       headers: fromNodeHeaders(request.headers),
       body: {
-        permissions: permissions as any,
+        permissions: permissions,
       },
-
     });
     if (!success) {
       this.logger.warn(

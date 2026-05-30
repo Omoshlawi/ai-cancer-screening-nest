@@ -7,7 +7,7 @@ import { ActivitiesModule } from './activities/activities.module';
 import { AddressHierarchyModule } from './address-hierarchy/address-hierarchy.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { RequireSystemPermissionsGuard } from './auth/auth.guards';
+import { ExportGuard, RequireSystemPermissionsGuard } from './auth/auth.guards';
 import { AuthModule } from './auth/auth.module';
 import { BotModule } from './bot/bot.module';
 import { RequireCHPGuard } from './chps/chp.guards';
@@ -64,6 +64,7 @@ import { ProviderFacilitiesModule } from './provider-facilities/provider-facilit
     AppService,
     { provide: APP_GUARD, useClass: RequireSystemPermissionsGuard },
     { provide: APP_GUARD, useClass: RequireCHPGuard },
+    { provide: APP_GUARD, useClass: ExportGuard },
   ],
 })
-export class AppModule { }
+export class AppModule {}
