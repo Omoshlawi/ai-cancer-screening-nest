@@ -104,7 +104,7 @@ model HealthProvider {
   screenings         Screening[]
   providerFacilities ProviderFacility[]
 
-  @@map("community_health_providers")
+  @@map("health_providers")
 }
 
 model Client {
