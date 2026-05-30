@@ -48,7 +48,7 @@ export class RequireCHPGuard implements CanActivate {
     if (!session || !session.session || !session.user)
       throw new UnauthorizedException();
 
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
+    const chp = await this.prismaService.healthProvider.findUnique({
       where: { userId: session.user.id },
     });
 

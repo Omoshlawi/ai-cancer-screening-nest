@@ -29,7 +29,7 @@ export class ScreeningsService {
     originalUrl: string,
     user: UserSession['user'],
   ) {
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
+    const chp = await this.prismaService.healthProvider.findUnique({
       where: { userId: user.id },
     });
 
@@ -184,7 +184,7 @@ export class ScreeningsService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
+    const chp = await this.prismaService.healthProvider.findUnique({
       where: { userId: user.id },
     });
     if (!chp) {

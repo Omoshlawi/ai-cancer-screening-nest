@@ -9,6 +9,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import {
@@ -57,7 +58,7 @@ export class CreateReferralDto {
 
 export class UpdateReferralDto extends PartialType(
   OmitType(CreateReferralDto, ['screeningId'] as const),
-) { }
+) {}
 
 export class FindReferralDto extends PaginationDto {
   @ApiProperty({
@@ -173,7 +174,9 @@ export class ReferralTestResponseDto {
   @ApiProperty() referralId: string;
   @ApiProperty({ enum: TestType }) testType: TestType;
   @ApiProperty({ enum: TestOutcome }) testResult: TestOutcome;
-  @ApiProperty({ enum: ActionTaken, required: false }) actionTaken?: ActionTaken | null;
+  @ApiProperty({ enum: ActionTaken, required: false })
+  actionTaken?: ActionTaken | null;
+  @ApiProperty({ required: false }) notes?: string | null;
   @ApiProperty() createdAt: Date;
   @ApiProperty() updatedAt: Date;
 }
@@ -307,6 +310,17 @@ export class CreateReferralTestDto {
   @IsOptional()
   @IsEnum(ActionTaken)
   actionTaken?: ActionTaken;
+
+  @ApiProperty({
+    description: 'Notes required when action taken is REFERRED',
+    required: false,
+  })
+  @ValidateIf(
+    (o: CreateReferralTestDto) => o.actionTaken === ActionTaken.REFERRED,
+  )
+  @IsNotEmpty({ message: 'Notes are required when action is REFERRED' })
+  @IsString()
+  notes?: string;
 }
 
 export class CompleteReferralDto {
@@ -330,7 +344,7 @@ export class CompleteReferralDto {
   tests: CreateReferralTestDto[];
 
   @ApiProperty({
-    description: "Additional diagnosis notes",
+    description: 'Additional diagnosis notes',
     required: false,
   })
   @IsOptional()

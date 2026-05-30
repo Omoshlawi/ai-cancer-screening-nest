@@ -17,7 +17,7 @@ export class ChpsService {
     private readonly prismaService: PrismaService,
     private readonly authService: AuthService<BetterAuthWithPlugins>,
     private readonly paginationService: PaginationService,
-  ) { }
+  ) {}
 
   async create(createChpDto: CreateChpDto) {
     const isUsernameAvailable = await this.authService.api.isUsernameAvailable({
@@ -42,7 +42,7 @@ export class ChpsService {
       },
     });
 
-    return await this.prismaService.communityHealthProvider.create({
+    return await this.prismaService.healthProvider.create({
       data: {
         firstName: createChpDto.firstName,
         lastName: createChpDto.lastName,
@@ -57,7 +57,7 @@ export class ChpsService {
 
   async findAll(findChpDto: FindChpDto, originalUrl: string) {
     const dbQuery: FunctionFirstArgument<
-      typeof this.prismaService.communityHealthProvider.findMany
+      typeof this.prismaService.healthProvider.findMany
     > = {
       where: {
         AND: [
@@ -70,30 +70,34 @@ export class ChpsService {
           {
             OR: findChpDto.name
               ? [
-                {
-                  firstName: {
-                    contains: findChpDto.name,
-                    mode: 'insensitive',
+                  {
+                    firstName: {
+                      contains: findChpDto.name,
+                      mode: 'insensitive',
+                    },
                   },
-                },
-                {
-                  lastName: {
-                    contains: findChpDto.name,
-                    mode: 'insensitive',
+                  {
+                    lastName: {
+                      contains: findChpDto.name,
+                      mode: 'insensitive',
+                    },
                   },
-                },
-              ]
+                ]
               : undefined,
           },
         ],
       },
       orderBy: findChpDto.sortBy
-        ? { [findChpDto.sortBy]: this.paginationService.getSortOrder(findChpDto.sortOrder) }
+        ? {
+            [findChpDto.sortBy]: this.paginationService.getSortOrder(
+              findChpDto.sortOrder,
+            ),
+          }
         : { createdAt: 'desc' },
       ...this.paginationService.buildPaginationQuery(findChpDto),
     };
     const [data, totalCount] = await Promise.all([
-      this.prismaService.communityHealthProvider.findMany({
+      this.prismaService.healthProvider.findMany({
         ...dbQuery,
         include: {
           user: true,
@@ -105,7 +109,7 @@ export class ChpsService {
           },
         },
       }),
-      this.prismaService.communityHealthProvider.count(pick(dbQuery, 'where')),
+      this.prismaService.healthProvider.count(pick(dbQuery, 'where')),
     ]);
 
     return {
@@ -119,7 +123,7 @@ export class ChpsService {
   }
 
   async findOne(id: string) {
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
+    const chp = await this.prismaService.healthProvider.findUnique({
       where: { id },
     });
     if (!chp) {

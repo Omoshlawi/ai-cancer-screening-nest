@@ -26,6 +26,7 @@ export const adminPluginAcl = createAccessControl({
   healthFacilityType: ['create', 'update', 'delete'],
   dashboard: ['view'],
   followups: ['create', 'list', 'update', 'delete'],
+  providerFacility: ['create', 'list', 'delete'],
 });
 
 const adminRole = adminPluginAcl.newRole({
@@ -39,6 +40,7 @@ const adminRole = adminPluginAcl.newRole({
   healthFacility: ['create', 'delete', 'update'],
   healthFacilityType: ['create', 'delete', 'update'],
   followups: ['list', 'delete'],
+  providerFacility: ['create', 'list', 'delete'],
   ...adminAc.statements,
 });
 
@@ -67,6 +69,7 @@ const chpRole = adminPluginAcl.newRole({
 const healthCareWorkerRole = adminPluginAcl.newRole({
   ...chpRole.statements,
   referrals: [...chpRole.statements.referrals, 'complete', 'view-any'],
+  providerFacility: ['list'],
 });
 
 export const adminPluginRoles = {

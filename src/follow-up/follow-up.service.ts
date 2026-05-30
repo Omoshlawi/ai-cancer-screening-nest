@@ -37,7 +37,7 @@ export class FollowUpService {
     const isAdmin = userRole?.toLowerCase() === 'admin';
 
     const chp = !isAdmin
-      ? await this.prismaService.communityHealthProvider.findUnique({
+      ? await this.prismaService.healthProvider.findUnique({
           where: { userId: user.id },
         })
       : null;
@@ -89,7 +89,7 @@ export class FollowUpService {
     const isAdmin = userRole?.toLowerCase() === 'admin';
 
     const chp = !isAdmin
-      ? await this.prismaService.communityHealthProvider.findUnique({
+      ? await this.prismaService.healthProvider.findUnique({
           where: { userId: user.id },
         })
       : null;
@@ -307,7 +307,7 @@ export class FollowUpService {
 
     // Get the CHP for the current user
     const chp = !isAdmin
-      ? await this.prismaService.communityHealthProvider.findUnique({
+      ? await this.prismaService.healthProvider.findUnique({
           where: { userId: user.id },
         })
       : null;
@@ -382,7 +382,7 @@ export class FollowUpService {
 
     // Get the CHP for the current user
     const chp = !isAdmin
-      ? await this.prismaService.communityHealthProvider.findUnique({
+      ? await this.prismaService.healthProvider.findUnique({
           where: { userId: user.id },
         })
       : null;
@@ -473,7 +473,7 @@ export class FollowUpService {
 
     // Ownership check (skip for admins)
     if (!isAdmin) {
-      const chp = await this.prismaService.communityHealthProvider.findUnique({
+      const chp = await this.prismaService.healthProvider.findUnique({
         where: { userId: user.id },
       });
       if (!chp || existingFollowUp.providerId !== chp.id) {

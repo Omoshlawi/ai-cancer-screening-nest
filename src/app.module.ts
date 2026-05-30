@@ -25,6 +25,7 @@ import { ScreeningsModule } from './screenings/screenings.module';
 import { FollowUpModule } from './follow-up/follow-up.module';
 import { ApksModule } from './apks/apks.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { ProviderFacilitiesModule } from './provider-facilities/provider-facility.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     FollowUpModule,
     ApksModule,
     DashboardModule,
+    ProviderFacilitiesModule,
   ],
 
   controllers: [AppController],

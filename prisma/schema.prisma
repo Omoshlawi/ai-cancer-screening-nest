@@ -8,27 +8,27 @@ datasource db {
 }
 
 model User {
-  id                      String                   @id @default(cuid())
-  name                    String
-  email                   String                   @unique
-  emailVerified           Boolean                  @default(false)
-  image                   String?
-  createdAt               DateTime                 @default(now())
-  updatedAt               DateTime                 @default(now()) @updatedAt
-  username                String?                  @unique
-  displayUsername         String?
-  role                    String?
-  banned                  Boolean?                 @default(false)
-  banReason               String?
-  banExpires              DateTime?
-  twoFactorEnabled        Boolean?                 @default(false)
-  phoneNumber             String?                  @unique
-  phoneNumberVerified     Boolean?
-  accounts                Account[]
-  communityHealthProvider CommunityHealthProvider?
-  sessions                Session[]
-  twofactors              TwoFactor[]
-  activities              UserActivity[]
+  id                  String          @id @default(cuid())
+  name                String
+  email               String          @unique
+  emailVerified       Boolean         @default(false)
+  image               String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @default(now()) @updatedAt
+  username            String?         @unique
+  displayUsername     String?
+  role                String?
+  banned              Boolean?        @default(false)
+  banReason           String?
+  banExpires          DateTime?
+  twoFactorEnabled    Boolean?        @default(false)
+  phoneNumber         String?         @unique
+  phoneNumberVerified Boolean?
+  accounts            Account[]
+  healthProvider      HealthProvider?
+  sessions            Session[]
+  twofactors          TwoFactor[]
+  activities          UserActivity[]
 
   @@map("user")
 }
@@ -90,28 +90,29 @@ model Jwks {
   @@map("jwks")
 }
 
-model CommunityHealthProvider {
-  id          String      @id @default(cuid())
-  userId      String      @unique
-  firstName   String
-  lastName    String
-  phoneNumber String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  clients     Client[]
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  followUps   FollowUp[]
-  screenings  Screening[]
+model HealthProvider {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  firstName          String
+  lastName           String
+  phoneNumber        String
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  clients            Client[]
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  followUps          FollowUp[]
+  screenings         Screening[]
+  providerFacilities ProviderFacility[]
 
   @@map("community_health_providers")
 }
 
 model Client {
-  id            String                  @id @default(cuid())
+  id            String         @id @default(cuid())
   firstName     String
   lastName      String
   dateOfBirth   DateTime
-  phoneNumber   String                  @unique
+  phoneNumber   String         @unique
   county        String
   subcounty     String
   ward          String
@@ -119,9 +120,9 @@ model Client {
   maritalStatus MaritalStatus
   createdById   String
   metadata      Json?
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
-  createdBy     CommunityHealthProvider @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  createdBy     HealthProvider @relation(fields: [createdById], references: [id], onDelete: Cascade)
   followUps     FollowUp[]
   screenings    Screening[]
 
@@ -129,7 +130,7 @@ model Client {
 }
 
 model Screening {
-  id                                      String                  @id @default(cuid())
+  id                                      String         @id @default(cuid())
   clientId                                String
   providerId                              String
   coordinates                             Json
@@ -145,13 +146,13 @@ model Screening {
   familyMemberDiagnosedWithCervicalCancer ScreenBoolean
   scoringResult                           Json?
   nextScreeningDate                       DateTime?
-  createdAt                               DateTime                @default(now())
-  updatedAt                               DateTime                @updatedAt
-  wasTriggeredBy                          FollowUp?               @relation("ResolvingScreening")
-  triggeredFollowUps                      FollowUp[]              @relation("TriggeringScreening")
+  createdAt                               DateTime       @default(now())
+  updatedAt                               DateTime       @updatedAt
+  wasTriggeredBy                          FollowUp?      @relation("ResolvingScreening")
+  triggeredFollowUps                      FollowUp[]     @relation("TriggeringScreening")
   referrals                               Referral[]
-  client                                  Client                  @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  provider                                CommunityHealthProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  client                                  Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  provider                                HealthProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@map("screenings")
 }
@@ -168,25 +169,39 @@ model HealthFacilityType {
 }
 
 model HealthFacility {
-  id          String             @id @default(uuid())
-  kmflCode    String             @unique
-  name        String
-  address     String?
-  county      String
-  subcounty   String
-  ward        String?
-  phoneNumber String?
-  email       String?
-  logo        String?
-  coordinates Json?
-  owner       String?
-  typeId      String
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  type        HealthFacilityType @relation(fields: [typeId], references: [id], onDelete: Cascade)
-  referrals   Referral[]
+  id                 String             @id @default(uuid())
+  kmflCode           String             @unique
+  name               String
+  address            String?
+  county             String
+  subcounty          String
+  ward               String?
+  phoneNumber        String?
+  email              String?
+  logo               String?
+  coordinates        Json?
+  owner              String?
+  typeId             String
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  type               HealthFacilityType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  referrals          Referral[]
+  providerFacilities ProviderFacility[]
 
   @@map("health_facilities")
+}
+
+model ProviderFacility {
+  id         String         @id @default(cuid())
+  providerId String
+  facilityId String
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  provider   HealthProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  facility   HealthFacility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, facilityId])
+  @@map("provider_facilities")
 }
 
 model FaqTopic {
@@ -285,6 +300,7 @@ model ReferralTest {
   testType    TestType
   testResult  TestOutcome
   actionTaken ActionTaken?
+  notes       String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   referral    Referral     @relation(fields: [referralId], references: [id], onDelete: Cascade)
@@ -294,28 +310,28 @@ model ReferralTest {
 }
 
 model FollowUp {
-  id                   String                  @id @default(cuid())
+  id                   String           @id @default(cuid())
   clientId             String
   providerId           String
   referralId           String?
   triggerScreeningId   String
   category             FollowUpCategory
-  priority             Priority                @default(MEDIUM)
-  startDate            DateTime                @default(now())
+  priority             Priority         @default(MEDIUM)
+  startDate            DateTime         @default(now())
   dueDate              DateTime
   completedAt          DateTime?
   outcomeNotes         String?
-  resolvingScreeningId String?                 @unique
+  resolvingScreeningId String?          @unique
   cancelReason         CancelReason?
   cancelNotes          String?
   canceledAt           DateTime?
-  createdAt            DateTime                @default(now())
-  updatedAt            DateTime                @updatedAt
-  client               Client                  @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  provider             CommunityHealthProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  referral             Referral?               @relation(fields: [referralId], references: [id], onDelete: Cascade)
-  resolvingScreening   Screening?              @relation("ResolvingScreening", fields: [resolvingScreeningId], references: [id])
-  triggerScreening     Screening               @relation("TriggeringScreening", fields: [triggerScreeningId], references: [id])
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  client               Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  provider             HealthProvider   @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  referral             Referral?        @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  resolvingScreening   Screening?       @relation("ResolvingScreening", fields: [resolvingScreeningId], references: [id])
+  triggerScreening     Screening        @relation("TriggeringScreening", fields: [triggerScreeningId], references: [id])
   outreachActions      OutreachAction[]
 
   @@index([referralId])
@@ -381,6 +397,7 @@ enum TestType {
 enum ActionTaken {
   TREATED
   BIOPSY
+  REFERRED
 }
 
 enum OutreachType {

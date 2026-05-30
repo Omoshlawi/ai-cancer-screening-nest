@@ -27,14 +27,14 @@ export class ClientsService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    let chp = await this.prismaService.communityHealthProvider.findUnique({
+    let chp = await this.prismaService.healthProvider.findUnique({
       where: { userId: user.id },
     });
 
     const userRole = Array.isArray(user.role) ? user.role[0] : user.role;
     if (!chp && userRole?.toLowerCase() === 'admin') {
       // If Admin creates client, assign to first available CHP to satisfy DB constraint
-      chp = await this.prismaService.communityHealthProvider.findFirst();
+      chp = await this.prismaService.healthProvider.findFirst();
     }
 
     if (!chp) {

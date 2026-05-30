@@ -76,6 +76,26 @@ export class ReferralController {
     );
   }
 
+  @Get('pending-for-my-facilities')
+  @RequireChp()
+  @RequireSystemPermission({ referrals: ['view-any'] })
+  @ApiOkResponse({ type: FindReferralResponseDto })
+  @ApiErrorsResponse()
+  @ApiOperation({
+    summary: 'Get pending referrals for facilities mapped to the current HCW',
+  })
+  findPendingForMyFacilities(
+    @Query() dto: FindReferralDto,
+    @OriginalUrl() originalUrl: string,
+    @Session() session: UserSession,
+  ) {
+    return this.referralService.findPendingForMyFacilities(
+      session.user,
+      originalUrl,
+      dto,
+    );
+  }
+
   @Get(':id')
   @RequireSystemPermission({
     referrals: ['list'],

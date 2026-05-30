@@ -39,7 +39,7 @@ export class ReferralService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const chp = await this.prismaService.communityHealthProvider.findUnique({
+    const chp = await this.prismaService.healthProvider.findUnique({
       where: { userId: user.id },
     });
     // Verify the screening exists
@@ -126,10 +126,9 @@ export class ReferralService {
           },
         },
       });
-    const provider =
-      await this.prismaService.communityHealthProvider.findUnique({
-        where: { userId: user.id },
-      });
+    const provider = await this.prismaService.healthProvider.findUnique({
+      where: { userId: user.id },
+    });
     const dbQuery: FunctionFirstArgument<
       typeof this.prismaService.referral.findMany
     > = {
@@ -360,6 +359,34 @@ export class ReferralService {
     return updatedReferral;
   }
 
+  private validateTestActions(tests: CompleteReferralDto['tests']): void {
+    for (const test of tests) {
+      if (test.testType !== 'VIA') continue;
+
+      if (test.testResult === 'POSITIVE') {
+        if (
+          test.actionTaken !== undefined &&
+          test.actionTaken !== 'TREATED' &&
+          test.actionTaken !== 'REFERRED'
+        ) {
+          throw new BadRequestException(
+            'VIA POSITIVE result only allows TREATED or REFERRED action',
+          );
+        }
+      } else if (test.testResult === 'SUSPICIOUS') {
+        if (test.actionTaken !== undefined && test.actionTaken !== 'BIOPSY') {
+          throw new BadRequestException(
+            'VIA SUSPICIOUS result only allows BIOPSY action',
+          );
+        }
+      } else if (test.actionTaken !== undefined) {
+        throw new BadRequestException(
+          `VIA ${test.testResult} result does not allow an action`,
+        );
+      }
+    }
+  }
+
   async complete(
     id: string,
     completeReferralDto: CompleteReferralDto,
@@ -385,7 +412,7 @@ export class ReferralService {
     }
 
     if (!canViewAny) {
-      const chp = await this.prismaService.communityHealthProvider.findUnique({
+      const chp = await this.prismaService.healthProvider.findUnique({
         where: { userId: user.id },
       });
       if (!chp || existingReferral.screening.providerId !== chp.id) {
@@ -394,6 +421,8 @@ export class ReferralService {
         );
       }
     }
+
+    this.validateTestActions(completeReferralDto.tests);
 
     const completedReferral = await this.prismaService.referral.update({
       where: {
@@ -473,7 +502,7 @@ export class ReferralService {
     }
 
     if (!canViewAny) {
-      const chp = await this.prismaService.communityHealthProvider.findUnique({
+      const chp = await this.prismaService.healthProvider.findUnique({
         where: { userId: user.id },
       });
       if (!chp || existingReferral.screening.providerId !== chp.id) {
@@ -520,6 +549,52 @@ export class ReferralService {
     );
 
     return cancelledReferral;
+  }
+
+  async findPendingForMyFacilities(
+    user: UserSession['user'],
+    originalUrl: string,
+    dto: { page?: number; limit?: number } = {},
+  ) {
+    const provider = await this.prismaService.healthProvider.findUnique({
+      where: { userId: user.id },
+    });
+
+    const facilityMappings = provider
+      ? await this.prismaService.providerFacility.findMany({
+          where: { providerId: provider.id },
+          select: { facilityId: true },
+        })
+      : [];
+
+    const facilityIds = facilityMappings.map((m) => m.facilityId);
+
+    const dbQuery = {
+      where: {
+        healthFacilityId: { in: facilityIds },
+        status: 'PENDING' as const,
+      },
+      orderBy: { createdAt: 'desc' as const },
+      include: {
+        screening: { include: { client: true } },
+        healthFacility: true,
+      },
+      ...this.paginationService.buildPaginationQuery(dto),
+    };
+
+    const [data, totalCount] = await Promise.all([
+      this.prismaService.referral.findMany(dbQuery),
+      this.prismaService.referral.count({ where: dbQuery.where }),
+    ]);
+
+    return {
+      results: data,
+      ...this.paginationService.buildPaginationControls(
+        totalCount,
+        originalUrl,
+        dto,
+      ),
+    };
   }
 
   async delete(
