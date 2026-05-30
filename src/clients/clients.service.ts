@@ -93,6 +93,10 @@ export class ClientsService {
             phoneNumber: findClientDto.phoneNumber ?? undefined,
             nationalId: findClientDto.nationalId ?? undefined,
             createdById: findClientDto.createdById ?? undefined,
+            createdAt: {
+              gte: findClientDto.from ?? undefined,
+              lte: findClientDto.to ?? undefined,
+            },
             metadata: findClientDto.risk
               ? {
                   path: ['riskInterpretation'],

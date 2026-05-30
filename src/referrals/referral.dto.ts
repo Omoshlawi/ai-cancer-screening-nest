@@ -1,4 +1,9 @@
-import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  OmitType,
+  PartialType,
+} from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
@@ -115,6 +120,42 @@ export class FindReferralDto extends PaginationDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter referrals created on or after this date',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  from?: Date;
+
+  @ApiPropertyOptional({
+    description: 'Filter referrals created on or before this date',
+    example: '2024-12-31T23:59:59.999Z',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  to?: Date;
+
+  @ApiPropertyOptional({
+    description: 'Filter referrals with appointment on or after this date',
+    example: '2024-06-01T00:00:00.000Z',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  appointmentTimeFrom?: Date;
+
+  @ApiPropertyOptional({
+    description: 'Filter referrals with appointment on or before this date',
+    example: '2024-06-30T23:59:59.999Z',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  appointmentTimeTo?: Date;
 }
 
 export class ScreeningItemResponseDto {

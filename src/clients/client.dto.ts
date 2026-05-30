@@ -10,7 +10,7 @@ import {
 import { Type } from 'class-transformer';
 import { PHONE_NUMBER_REGEX } from '../common/common.contants';
 import { PaginationDto } from '../common/commond.dto';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RiskInterpretation } from '../screenings/scoring.dto';
 
 // Kenyan phone number regex: matches numbers in form +2547XXXXXXXX or 07XXXXXXXX
@@ -268,4 +268,22 @@ export class FindClientDto extends PaginationDto {
   @IsOptional()
   @IsString()
   createdByUserId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter clients registered on or after this date',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  from?: Date;
+
+  @ApiPropertyOptional({
+    description: 'Filter clients registered on or before this date',
+    example: '2024-12-31T23:59:59.999Z',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  to?: Date;
 }

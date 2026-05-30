@@ -147,6 +147,14 @@ export class ReferralService {
             screeningId: findReferralDto.screeningId ?? undefined,
             healthFacilityId: findReferralDto.healthFacilityId ?? undefined,
             status: findReferralDto.status ?? undefined,
+            createdAt: {
+              gte: findReferralDto.from ?? undefined,
+              lte: findReferralDto.to ?? undefined,
+            },
+            appointmentTime: {
+              gte: findReferralDto.appointmentTimeFrom ?? undefined,
+              lte: findReferralDto.appointmentTimeTo ?? undefined,
+            },
           },
           findReferralDto.search
             ? {
